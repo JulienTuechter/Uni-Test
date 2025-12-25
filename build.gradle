@@ -1,0 +1,37 @@
+allprojects {
+    group = 'de.fhmaze'
+    version = '1.0.0'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    dependencies {
+        testImplementation 'org.mockito:mockito-core:5.20.0'
+        testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.withType(Test) {
+        useJUnitPlatform()
+    }
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += [
+            '-Xlint:all',
+            '-Xlint:-this-escape',
+            '-Xlint:-serial'
+        ]
+    }
+}

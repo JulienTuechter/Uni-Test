@@ -1,0 +1,4 @@
+skinparam defaultFontName Consolas
+skinparam classFontStyle bold
+skinparam classAttributeIconSize 0
+hide circle

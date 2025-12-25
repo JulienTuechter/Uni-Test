@@ -1,0 +1,3 @@
+package de.fhmaze.engine.common;
+
+public record Position(int x, int y) {}

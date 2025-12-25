@@ -1,0 +1,37 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "process",
+            "label": "build",
+            "command": "gradlew.bat",
+            "args": [
+                "clean",
+                "build"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "type": "process",
+            "label": "launch",
+            "dependsOn": [
+                "build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/FHMaze"
+            },
+            "command": "FHMaze.bat",
+            "group": "none",
+            "presentation": {
+                "panel": "dedicated",
+                "clear": true
+            }
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+plugins {
+    id 'com.gradleup.shadow' version '9.2.2'
+}
+
+dependencies {
+    implementation project(':GameEngine')
+    implementation project(':GameCommunication')
+    implementation project(':GamePlainText')
+    implementation project(':GameConsole')
+    implementation project(':GameBot')
+}
+
+shadowJar {
+    archiveFileName = 'BotPlayer.jar'
+    destinationDirectory = file("${rootProject.projectDir}/FHMaze/Players")
+
+    manifest {
+        attributes (
+            'Main-Class': 'de.fhmaze.runner.GameRunner'
+        )
+    }
+}

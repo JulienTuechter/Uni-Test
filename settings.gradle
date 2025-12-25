@@ -1,0 +1,3 @@
+rootProject.name = 'se'
+
+include('GameEngine', 'GameCommunication', 'GamePlainText', 'GameConsole', 'GameBot', 'GameRunner')

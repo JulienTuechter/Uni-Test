@@ -1,0 +1,460 @@
+@startuml GameEngine
+
+' styling options
+!include %dirpath()/../styles/class.iuml
+
+' class diagram (https://plantuml.com/class-diagram)
+!startsub ACTION
+package engine {
+    package action {
+        package result {
+            interface ActionResult <<sealed interface>> {
+                permits OkayActionResult, NotOkayActionResult
+            }
+
+            class OkayActionResult <<non-sealed>>
+            ActionResult <|.. OkayActionResult
+
+            class NotOkayActionResult <<non-sealed>>
+            ActionResult <|.. NotOkayActionResult
+
+            class DirectionActionResult <<leaf>> {
+                + DirectionActionResult(direction: Direction)
+                + getDirection(): Direction
+            }
+            OkayActionResult <|-- DirectionActionResult
+            DirectionActionResult --> "1" engine.common.Direction : - direction: Direction {readOnly}
+
+            class PositionActionResult <<leaf>> {
+                + PositionActionResult(position: Position)
+                + getPosition(): Position
+            }
+            OkayActionResult <|-- PositionActionResult
+            PositionActionResult --> "1" engine.common.Position : - position: Position {readOnly}
+
+            class FormActionResult <<leaf>>
+            OkayActionResult <|-- FormActionResult
+
+            class SheetActionResult <<leaf>>
+            OkayActionResult <|-- SheetActionResult
+
+            class BlockedActionResult <<leaf>>
+            NotOkayActionResult <|-- BlockedActionResult
+
+            class WrongOrderActionResult <<leaf>>
+            NotOkayActionResult <|-- WrongOrderActionResult
+
+            class NotYoursActionResult <<leaf>>
+            NotOkayActionResult <|-- NotYoursActionResult
+
+            class EmptyActionResult <<leaf>>
+            NotOkayActionResult <|-- EmptyActionResult
+
+            class TalkingActionResult <<leaf>>
+            NotOkayActionResult <|-- TalkingActionResult
+
+            class TakingActionResult <<leaf>>
+            NotOkayActionResult <|-- TakingActionResult
+
+            class NotSupportedActionResult <<leaf>>
+            NotOkayActionResult <|-- NotSupportedActionResult
+        }
+
+        interface Action <<interface>> {
+            + successful(result: ActionResult): boolean {abstract}
+        }
+
+        class InitAction <<leaf>> {
+            + successful(result: ActionResult): boolean
+        }
+        Action <|.. InitAction
+
+        class GoAction <<leaf>> {
+            + GoAction(direction: Direction)
+            + successful(result: ActionResult): boolean
+            + direction(): Direction
+        }
+        Action <|.. GoAction
+        GoAction --> "1" engine.common.Direction : - direction: Direction {readOnly}
+
+        class KickAction <<leaf>> {
+            + KickAction(direction: Direction)
+            + successful(result: ActionResult): boolean
+            + direction(): Direction
+        }
+        Action <|.. KickAction
+        KickAction --> "1" engine.common.Direction : - direction: Direction {readOnly}
+
+        class PositionAction <<leaf>> {
+            + successful(result: ActionResult): boolean
+        }
+        Action <|.. PositionAction
+
+        class TakeAction <<leaf>> {
+            + successful(result: ActionResult): boolean
+        }
+        Action <|.. TakeAction
+
+        class PutAction <<leaf>> {
+            + successful(result: ActionResult): boolean
+        }
+        Action <|.. PutAction
+
+        class FinishAction <<leaf>> {
+            + successful(result: ActionResult): boolean
+        }
+        Action <|.. FinishAction
+    }
+}
+!endsub
+
+!startsub COMMON
+package engine {
+    package common {
+        enum Direction <<enumeration>> {
+            + NORTH
+            + EAST
+            + SOUTH
+            + WEST
+            --
+            - deltaX: int
+            - deltaY: int
+            --
+            + Direction(deltaX: int, deltaY: int)
+            + right(): Direction
+            + left(): Direction
+            + back(): Direction
+            + getDeltaX(): int
+            + getDeltaY(): int
+        }
+
+        class Position <<leaf>> {
+            - x: int {readOnly}
+            - y: int {readOnly}
+            --
+            + Position(x: int, y: int)
+            + x(): int
+            + y(): int
+        }
+    }
+}
+!endsub
+
+!startsub GAME
+package engine {
+    package game {
+        package cell {
+            class Cell {
+                - visited: boolean
+                --
+                + Cell(status: CellStatus)
+                # setStatus(status: CellStatus): void
+                + getStatus(): CellStatus
+                # visit(): void
+                + isVisited(): boolean
+                + isVisitable(): boolean
+                + hasEnemy(): boolean
+                + hasEnemyInSight(): boolean
+                + hasNoEnemyInfo(): boolean
+                + getEnemyDistance(): int
+                + hasForm(): boolean
+                + getForm(): Form
+                + hasFinish(): boolean
+                + getFinish(): Finish
+            }
+            Cell o-- "1" engine.status.CellStatus : - status: CellStatus
+
+            class CellTurnHandler {
+                + CellTurnHandler(player: Player)
+                + onTurnSuccess(action: Action, result: ActionResult): void
+                + onCellStatusUpdate(currentCellStatus: CellStatus,
+                neighborCellStatuses: CellStatus[]): void
+            }
+            engine.turn.listener.TurnListener <|.. CellTurnHandler
+            engine.turn.listener.CellStatusListener <|.. CellTurnHandler
+            CellTurnHandler ..> "1" engine.game.player.Player : - player: Player {readOnly}
+
+            class Form <<leaf>> {
+                - playerId: int
+                - formId: int
+                --
+                + Form(playerId: int, formId: int)
+                + takeable(playerId: int, formCount: int): boolean
+                + takeable(player: Player): boolean
+                + playerId(): int
+                + formId(): int
+            }
+
+            class Finish <<leaf>> {
+                - playerId: int
+                - formCount: int
+                --
+                + Finish(playerId: int, formCount: int)
+                + finishable(playerId: int, formCount: int): boolean
+                + finishable(player: Player): boolean
+                + playerId(): int
+                + formCount(): int
+            }
+
+            class Maze {
+                - level: int {readOnly}
+                --
+                + Maze(sizeX: int, sizeY: int, level: int)
+                + getNeighborCells(position: Position): Cell[]
+                + getNeighborCell(position: Position, direction: Direction): Cell
+                + getCell(position: Position): Cell
+                + getNeighborPosition(position: Position, direction: Direction): Position
+                - getNeighborX(x: int, direction: Direction): int
+                - getNeighborY(y: int, direction: Direction): int
+                + getSizeX(): int
+                + getSizeY(): int
+                + getLevel(): int
+            }
+            Maze *-- "*" Cell : - cells: Cell[][] {readOnly}
+        }
+
+        package player {
+            abstract class Player <<abstract>> {
+                - id: int {readOnly}
+                - formCount: int
+                --
+                + Player(params: PlayerParams)
+                + getId(): int
+                + chooseNextAction(): Action {abstract}
+                ~ goDirection(direction: Direction): void
+                + getPosition(): Position
+                + getDirection(): Direction
+                + getMaze(): Maze
+                + getCurrentCell(): Cell
+                + getNeighborCells(): Cell[]
+                + getNeighborCell(direction: Direction): Cell
+                ~ takeForm(): void
+                + getFormCount(): int
+            }
+            engine.turn.listener.TurnListener <|.. Player
+            Player --> "1" engine.game.cell.Maze : - maze: Maze {readOnly}
+            Player --> "1" engine.common.Position : - position: Position
+            Player --> "1" engine.common.Direction : - direction: Direction
+
+            interface PlayerFactory <<interface>> {
+                + createPlayer(params: PlayerParams): Player {abstract}
+            }
+
+            class PlayerParams <<leaf>> {
+                - id: int {readOnly}
+                --
+                + PlayerParams(id: int, start: Position, maze: Maze)
+                + id(): int
+                + start(): Position
+                + maze(): Maze
+            }
+            PlayerParams --> "1" engine.common.Position : - start: Position {readOnly}
+            PlayerParams --> "1" engine.game.cell.Maze : - maze: Maze {readOnly}
+
+            class PlayerTurnHandler {
+                + PlayerTurnHandler(player: Player)
+                + onTurnSuccess(action: Action, result: ActionResult): void
+            }
+            engine.turn.listener.TurnListener <|.. PlayerTurnHandler
+            PlayerTurnHandler ..> "1" Player : - player: Player {readOnly}
+        }
+
+        class Game {
+            + Game(gameIOFactory: GameIOFactory, playerFactory: PlayerFactory)
+            + start(): void
+            - init(initFactory: InitFactory): void
+            - turnLoop(turnManager: TurnManager): void
+            + stop(): void
+            + getMaze(): Maze
+        }
+        Game ..> "1" engine.io.GameIOFactory : - gameIOFactory: GameIOFactory {readOnly}
+        Game ..> "1" PlayerFactory : - playerFactory: PlayerFactory {readOnly}
+        Game ..> "1" engine.io.GameInputReader : - reader: GameInputReader
+        Game ..> "1" engine.io.ActionSender : - sender: ActionSender
+        Game ..> "1" engine.io.GameLogger : - logger: GameLogger
+        Game --> "1" engine.game.cell.Maze : - maze: Maze
+        Game --> "1" engine.game.player.Player : - player: Player
+
+        class GameInitFactory {
+            # GameInitFactory(mazeSupplier: Supplier<Maze>, playerFactory: PlayerFactory)
+            + createMaze(mazeInfo: MazeInfo): Maze
+            + createPlayer(playerInfo: PlayerInfo): Player
+        }
+        engine.init.InitFactory <|.. GameInitFactory
+        GameInitFactory ..> "1" engine.game.cell.Maze : - mazeSupplier: Supplier<Maze> {readOnly}
+        GameInitFactory ..> "1" engine.game.player.PlayerFactory : - playerFactory: PlayerFactory {readOnly}
+
+        class GameTurnManager {
+            # GameTurnManager(player: Player, logger: GameLogger)
+            - addListeners(player: Player): void
+            + onTurnFailure(action: Action, result: ActionResult): void
+        }
+        engine.turn.TurnManager <|-- GameTurnManager
+        engine.turn.listener.TurnListener <|.. GameTurnManager
+        GameTurnManager ..> "1" engine.io.GameLogger : - logger: GameLogger {readOnly}
+    }
+}
+!endsub
+
+!startsub INIT
+package engine {
+    package init {
+        class MazeInfo <<leaf>> {
+            - sizeX: int {readOnly}
+            - sizeY: int {readOnly}
+            - level: int {readOnly}
+            --
+            + MazeInfo(sizeX: int, sizeY: int, level: int)
+            + sizeX(): int
+            + sizeY(): int
+            + level(): int
+        }
+
+        class PlayerInfo <<leaf>> {
+            - id: int {readOnly}
+            --
+            + PlayerInfo(id: int, start: Position)
+            + id(): int
+            + start(): Position
+        }
+        PlayerInfo --> "1" engine.common.Position : - start: Position {readOnly}
+
+        interface InitFactory <<interface>> {
+            + createMaze(mazeInfo: MazeInfo): Maze {abstract}
+            + createPlayer(playerInfo: PlayerInfo): Player {abstract}
+        }
+    }
+}
+!endsub
+
+!startsub IO
+package engine {
+    package io {
+        interface GameIOFactory <<interface>> {
+            + createGameInputReader(): GameInputReader {abstract}
+            + createActionSender(): ActionSender {abstract}
+            + createGameLogger(): GameLogger {abstract}
+        }
+
+        interface GameInputReader <<interface>> {
+            + readMazeInfo(): MazeInfo {abstract}
+            + readPlayerInfo(): PlayerInfo {abstract}
+            + hasNextTurn(): boolean {abstract}
+            + readTurnInfo(): TurnInfo {abstract}
+            + close(): void {abstract}
+        }
+
+        interface ActionSender <<interface>> {
+            + sendAction(action: Action): void {abstract}
+        }
+
+        interface GameLogger <<interface>> {
+            + logMessage(message: String, args: Object...): void {abstract}
+            + logLastActionResult(lastActionResult: ActionResult): void {abstract}
+            + logCurrentCell(currentCell: Cell): void {abstract}
+            + logNeighborCells(neighborCells: Cell[]): void {abstract}
+            + logMaze(maze: Maze, currentCell: Cell): void {abstract}
+        }
+    }
+}
+!endsub
+
+!startsub STATUS
+package engine {
+    package status {
+        interface CellStatus <<interface>>
+
+        abstract class VisitableCellStatus <<abstract>> {
+            - enemyDistance: int {readOnly}
+            --
+            # VisitableCellStatus(enemyDistance: int)
+            # VisitableCellStatus()
+            + hasEnemy(): boolean
+            + hasEnemyInSight(): boolean
+            + hasNoEnemyInfo(): boolean
+            + getEnemyDistance(): int
+        }
+        CellStatus <|-- VisitableCellStatus
+
+        class WallCellStatus <<leaf>>
+        CellStatus <|-- WallCellStatus
+
+        class FloorCellStatus <<leaf>> {
+            + FloorCellStatus(enemyDistance: int)
+            + FloorCellStatus()
+        }
+        VisitableCellStatus <|-- FloorCellStatus
+
+        class FormCellStatus <<leaf>> {
+            - playerId: int {readOnly}
+            - formId: int {readOnly}
+            --
+            + FormCellStatus(playerId: int, formId: int, enemyDistance: int)
+            + FormCellStatus(playerId: int, formId: int)
+            + getPlayerId(): int
+            + getFormId(): int
+        }
+        VisitableCellStatus <|-- FormCellStatus
+
+        class FinishCellStatus <<leaf>> {
+            - playerId: int {readOnly}
+            - formCount: int {readOnly}
+            --
+            + FinishCellStatus(playerId: int, formCount: int, enemyDistance: int)
+            + FinishCellStatus(playerId: int, formCount: int)
+            + getPlayerId(): int
+            + getFormCount(): int
+        }
+        VisitableCellStatus <|-- FinishCellStatus
+
+        class UnknownCellStatus <<leaf>>
+        CellStatus <|-- UnknownCellStatus
+    }
+}
+!endsub
+
+!startsub TURN
+package engine {
+    package turn {
+        class TurnInfo <<leaf>> {
+            + TurnInfo(lastActionResult: ActionResult, currentCellStatus: CellStatus,
+              neighborCellStatuses: CellStatus[])
+            + lastActionResult(): ActionResult
+            + currentCellStatus(): CellStatus
+            + neighborCellStatuses(): CellStatus[]
+            + neighborCellStatus(direction: Direction): CellStatus
+        }
+        TurnInfo --> "1" engine.action.result.ActionResult : - lastActionResult: ActionResult {readOnly}
+        TurnInfo --> "1" engine.status.CellStatus : - currentCellStatus: CellStatus {readOnly}
+        TurnInfo --> "4" engine.status.CellStatus : - neighborCellStatuses: CellStatus[] {readOnly}
+
+        class TurnManager {
+            + addTurnListener(turnListener: TurnListener): void
+            + addTurnListeners(turnListeners: TurnListener...): void
+            - notifyTurnSuccess(action: Action, result: ActionResult): void
+            - notifyTurnFailure(action: Action, result: ActionResult): void
+            + addCellStatusListener(cellStatusListener: CellStatusListener): void
+            + addCellStatusListeners(cellStatusListeners: CellStatusListener...): void
+            - notifyCellStatusUpdate(currentCellStatus: CellStatus,
+            neighborCellStatuses: CellStatus[]): void
+            + process(lastAction: Action, turnInfo: TurnInfo): void
+        }
+        TurnManager o-- "*" engine.turn.listener.TurnListener : - turnListeners: List<TurnListener> {readOnly}
+        TurnManager o-- "*" engine.turn.listener.CellStatusListener : - cellStatusListeners: List<CellStatusListener> {readOnly}
+
+        package listener {
+            interface TurnListener <<interface>> {
+                + onTurnSuccess(action: Action, result: ActionResult): void
+                + onTurnFailure(action: Action, result: ActionResult): void
+            }
+
+            interface CellStatusListener <<interface>> {
+                + onCellStatusUpdate(currentCellStatus: CellStatus,
+                neighborCellStatuses: CellStatus[]): void {abstract}
+            }
+        }
+    }
+}
+!endsub
+
+@enduml
