@@ -1,300 +1,210 @@
 package de.fhmaze.bot.game;
 
 import de.fhmaze.engine.common.Direction;
+import de.fhmaze.engine.common.Position;
 import de.fhmaze.engine.game.cell.Cell;
 import de.fhmaze.engine.game.cell.Finish;
 import de.fhmaze.engine.game.cell.Form;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import de.fhmaze.engine.game.cell.Sheet;
+
+import java.util.*;
 import java.util.function.Predicate;
 
-/**
- * Speichert und pflegt das Wissen des Bots über das Labyrinth.
- *
- * Kernideen:
- * - Jeder besuchbare Zelltyp (VisitableCell, FormCell, FinishCell) wird als Knoten
- *   in einem Graphen abgelegt.
- * - Kanten zwischen Knoten entsprechen begehbaren Nachbarschaften in einer Richtung.
- *   Rückkanten werden automatisch ergänzt (bidirektionale Verbindung).
- * - Für den eigenen Spieler gemerkte Ziele: Formulare (pro ID) und die Zielzelle (Finish).
- * - Pfadsuche erfolgt per BFS (Breadth-First Search), um kürzeste Wege zu finden.
- */
 public class BotKnowledge {
-    /** ID des Spielers, um nur eigene Form-/Finish-Zellen zu speichern. */
     private final int playerId;
 
-    /** Merkt sich alle bekannten Formulare (nur für diesen Spieler), indiziert nach Form-ID. */
-    private final Map<Integer, Cell> knownForms = new HashMap<>();
+    // Speicheroptimierung: Map statt Cell-Objekten
+    // Key: Position (Record hat equals/hashCode implementiert)
+    // Value: 0 = Unknown (implizit), 1 = Floor, 2 = Wall, 3 = Sheet
+    private final Map<Position, Byte> grid = new HashMap<>();
+    private final Set<Position> visited = new HashSet<>();
 
-    /**
-     * Adjazenz-Liste: Für jede besuchbare Zelle (Knoten) wird pro Richtung auf die
-     * Nachbarzelle (Knoten) gezeigt. So entsteht ein ungewichteter Graph.
-     */
-    private final Map<Cell, Map<Direction, Cell>> adjacency = new HashMap<>();
+    // Wichtige Orte
+    private final Map<Integer, Position> knownForms = new HashMap<>();
+    private final List<Position> knownSheets = new ArrayList<>();
+    private Position finishPosition;
 
-    /** Die bekannte Zielzelle (nur wenn sie zu diesem Spieler gehört). */
-    private Cell finishCell;
+    // Map-Grenzen für Symmetrie
+    private int minX = Integer.MAX_VALUE;
+    private int maxX = Integer.MIN_VALUE;
+    private int minY = Integer.MAX_VALUE;
+    private int maxY = Integer.MIN_VALUE;
 
-    /** Standard-Konstruktor mit Spieler-ID. */
     public BotKnowledge(int playerId) {
         this.playerId = playerId;
     }
 
     /**
-     * Nimmt die aktuelle Zelle und deren Nachbarn auf und aktualisiert den Graphen.
-     *
-     * - Erzeugt Knoten für aktuelle Zelle und (besuchbare) Nachbarn.
-     * - Trägt gerichtete Kanten current -> neighbor für jede Richtung ein.
-     * - Ergänzt die Rückkante neighbor -> current automatisch über direction.back().
-     * - Merkt sich eigene Form-/Finish-Zellen.
+     * Aktualisierte Methode: Benötigt die aktuelle Position des Spielers,
+     * da die Zellen selbst nicht wissen, wo sie sind.
      */
-    public void observeEnvironment(Cell currentCell, Cell[] neighborCells) {
-        if (playerId < 0 || currentCell == null || neighborCells == null) {
-            return;
-        }
+    public void observeEnvironment(Position currentPos, Cell currentCell, Cell[] neighborCells) {
+        if (currentCell == null) return;
 
-        observeCell(currentCell);
+        // 1. Eigene Position verarbeiten
+        updateCellData(currentPos, currentCell);
+        visited.add(currentPos);
 
-        // Nachbarn-Map der aktuellen Zelle (Kanten je Richtung) anlegen oder holen
-        Map<Direction, Cell> neighbors = adjacency.get(currentCell);
-        if (neighbors == null) {
-            neighbors = new EnumMap<>(Direction.class);
-            adjacency.put(currentCell, neighbors);
-        }
+        // 2. Nachbarn verarbeiten (Index im Array entspricht Direction.ordinal())
+        if (neighborCells != null) {
+            Direction[] dirs = Direction.values();
+            for (int i = 0; i < dirs.length && i < neighborCells.length; i++) {
+                Cell neighbor = neighborCells[i];
+                Direction dir = dirs[i];
 
-        Direction[] directions = Direction.values();
-        int length = Math.min(directions.length, neighborCells.length);
-
-        for (int index = 0; index < length; index++) {
-            Cell neighbor = neighborCells[index];
-            Direction direction = directions[index];
-
-            if (!neighbor.isVisitable()) continue;
-
-            // Nachbarzelle registrieren.
-            observeCell(neighbor);
-
-            // Kante current --(direction)--> neighbor setzen.
-            neighbors.put(direction, neighbor);
-
-            // Rückkante neighbor --(direction.back)--> current sicherstellen.
-            Map<Direction, Cell> reverseNeighbors = adjacency.get(neighbor);
-            if (reverseNeighbors == null) {
-                reverseNeighbors = new EnumMap<>(Direction.class);
-                adjacency.put(neighbor, reverseNeighbors);
-            }
-            reverseNeighbors.put(direction.back(), currentCell);
-        }
-    }
-
-    public Cell getForm(int formId) {
-        return knownForms.get(formId);
-    }
-
-    public Cell getFinishCell() {
-        return finishCell;
-    }
-
-    /**
-     * Gibt die erste Richtung auf dem kürzesten Weg vom Start zur Zielzelle zurück
-     *liefert null wenn kein Weg bekannt ist oder Start bereits Ziel ist
-     */
-    public Direction nextDirectionTowards(Cell start, Cell target) {
-        List<Direction> path = shortestPath(start, target);
-        if (path.isEmpty()) return null;
-        return path.get(0);
-    }
-
-    /**
-     * Gibt die erste Richtung auf einem kürzesten Weg zu irgendeiner unbesuchten Zelle zurück.
-     */
-    public Direction nextDirectionToUnvisited(Cell start) {
-        List<Direction> path = shortestPath(start, cell -> !cell.isVisited());
-        if (path.isEmpty()) return null;
-        return path.get(0);
-    }
-
-    /**
-    * Sucht nach einer verschobenen Form in der Nachbarschaft einer bekannten Position.
-    *
-    * @param formId Die ID der gesuchten Form
-    * @param expectedCell Die Zelle, wo die Form erwartet wurde
-    * @return Die neue Zelle mit der Form, oder null wenn nicht gefunden
-    */
-    public Cell searchDisplacedForm(int formId, Cell expectedCell) {
-        if (expectedCell == null) {
-            return null;
-        }
-
-        // Prüfen ob die Form noch an der erwarteten Position ist
-        if (expectedCell.hasForm()) {
-            Form form = expectedCell.getForm();
-            if (form.takeable(playerId, formId)) {
-                return expectedCell;
-            }
-        }
-
-        // Suche in den direkten Nachbarn
-        Map<Direction, Cell> neighbors = adjacency.get(expectedCell);
-        if (neighbors != null) {
-            for (Cell neighbor : neighbors.values()) {
-                if (neighbor != null && neighbor.hasForm()) {
-                    Form form = neighbor.getForm();
-                    if (form.takeable(playerId, formId)) {
-                        // Form gefunden! Aktualisiere die gespeicherte Position
-                        knownForms.put(formId, neighbor);
-                        return neighbor;
-                    }
+                if (neighbor != null) {
+                    // Position des Nachbarn berechnen
+                    Position neighborPos = calculatePosition(currentPos, dir);
+                    updateCellData(neighborPos, neighbor);
                 }
             }
         }
-
-        // Form nicht in unmittelbarer Nachbarschaft gefunden
-        return null;
-    }
-
-    public void updateFormPosition(int formId, Cell newCell) {
-        if (newCell != null && newCell.hasForm()) {
-            Form form = newCell.getForm();
-            if (form.takeable(playerId, formId)) {
-                knownForms.put(formId, newCell);
-            }
-        }
     }
 
     /**
-     * Registriert eine Zelle fürs knowledge:
-     * - FormCell/FinishCell werden nur gespeichert, wenn sie zu diesem Spieler gehören
-     * - für alle besuchbaren Zellen wird ein (ggf. leerer) Nachbarschaftseintrag erzeugt.
+     * Hilfsmethode zur Berechnung einer neuen Position, da Position kein .add() hat.
      */
-    private void observeCell(Cell cell) {
-        if (cell == null) {
-            return;
+    private Position calculatePosition(Position start, Direction dir) {
+        return new Position(start.x() + dir.getDeltaX(), start.y() + dir.getDeltaY());
+    }
+
+    private void updateCellData(Position pos, Cell cell) {
+        // Grenzen aktualisieren
+        updateBounds(pos);
+
+        // Typ bestimmen
+        byte type = 1; // Floor
+
+        if (!cell.isVisitable()) {
+            type = 2; // Wall
+        } else if (cell.hasSheet()) {
+            type = 3; // Sheet
+            if (!knownSheets.contains(pos)) {
+                knownSheets.add(pos);
+            }
         }
 
+        // Wenn wir wissen, dass hier KEIN Sheet mehr ist (weil wir es z.B. aufgenommen haben), entfernen
+        if (!cell.hasSheet() && knownSheets.contains(pos)) {
+            knownSheets.remove(pos);
+        }
+
+        grid.put(pos, type);
+
+        // Inhalte prüfen
         if (cell.hasForm()) {
             Form form = cell.getForm();
             if (form.playerId() == playerId) {
-                knownForms.putIfAbsent(form.formId(), cell);
-            }
-            if (!adjacency.containsKey(cell)) {
-                // Knoten im Graphen anlegen
-                adjacency.put(cell, new EnumMap<>(Direction.class));
+                knownForms.put(form.formId(), pos);
             }
         } else if (cell.hasFinish()) {
             Finish finish = cell.getFinish();
-            if (finish.playerId() == playerId) {
-                finishCell = cell;
-            }
-            if (!adjacency.containsKey(cell)) {
-                // Knoten im Graphen anlegen
-                adjacency.put(cell, new EnumMap<>(Direction.class));
-            }
-        } else if (cell.isVisitable()) {
-            if (!adjacency.containsKey(cell)) {
-                // VisitableCell Knoten im Graphen anlegen
-                adjacency.put(cell, new EnumMap<>(Direction.class));
+            if (finish.playerId() == playerId || finish.playerId() == -1) {
+                finishPosition = pos;
             }
         }
     }
 
-    /**
-     * Kürzester-Pfad-Helfer: Überladung für ein konkretes Ziel.
-     * Gibt die Richtungsfolge vom Start zum Ziel zurück (leer, wenn unbekannt/unmöglich).
-     */
-    private List<Direction> shortestPath(Cell start, Cell goal) {
-        if (goal == null) {
-            return Collections.emptyList();
-        }
-        return shortestPath(start, goal::equals);
+    private void updateBounds(Position pos) {
+        if (pos.x() < minX) minX = pos.x();
+        if (pos.x() > maxX) maxX = pos.x();
+        if (pos.y() < minY) minY = pos.y();
+        if (pos.y() > maxY) maxY = pos.y();
     }
 
-    /**
-     * Kürzester-Pfad-Suche per BFS (Breitensuche) über den gespeicherten Graphen.
-     */
-    private List<Direction> shortestPath(Cell start, Predicate<Cell> goalPredicate) {
-        if (start == null || goalPredicate == null || goalPredicate.test(start)) {
-            return Collections.emptyList();
-        }
+    // --- Pfadfindung (BFS) ---
 
-        // Standard-BFS-Strukturen:
-        // queue: Abarbeitung in Entfernungen
-        // previous: merkt Vorgänger-Knoten zur späteren fadrekonstruktion
-        // directionTaken: merkt die Richtung, mit der der Knoten erreicht wurde
-        Queue<Cell> queue = new ArrayDeque<>();
-        Map<Cell, Cell> previous = new HashMap<>();
-        Map<Cell, Direction> directionTaken = new HashMap<>();
+    public Direction nextDirectionTowards(Position start, Predicate<Position> goalPredicate) {
+        // BFS findet den kürzesten Weg zu einer Position, die das Prädikat erfüllt
+        if (goalPredicate.test(start)) return null;
 
-        queue.offer(start);
-        previous.put(start, null);
+        Queue<Position> queue = new ArrayDeque<>();
+        Map<Position, Position> previous = new HashMap<>();
+        Map<Position, Direction> moveDir = new HashMap<>(); // Merkt sich die erste Richtung
+        Set<Position> seen = new HashSet<>();
+
+        queue.add(start);
+        seen.add(start);
 
         while (!queue.isEmpty()) {
-            Cell current = queue.poll();
+            Position current = queue.poll();
 
-            // Alle bekannten Nachbarn dieser Zelle ansehen.
-            Map<Direction, Cell> neighbors = adjacency.getOrDefault(current, Collections.emptyMap());
+            if (goalPredicate.test(current)) {
+                return reconstructFirstStep(start, current, previous, moveDir);
+            }
 
-            for (Map.Entry<Direction, Cell> entry : neighbors.entrySet()) {
-                Cell neighbor = entry.getValue();
-                if (neighbor == null || previous.containsKey(neighbor)) {
-                    continue;
+            for (Direction dir : Direction.values()) {
+                Position neighbor = calculatePosition(current, dir);
+
+                // Prüfen ob begehbar (im Grid vorhanden und keine Wand)
+                // Wir behandeln 'unbekannt' (null) als begehbar für die Planung,
+                // damit der Bot auch in unbekannte Gebiete läuft.
+                Byte type = grid.get(neighbor);
+                boolean isWall = (type != null && type == 2);
+
+                if (!isWall && !seen.contains(neighbor)) {
+                    seen.add(neighbor);
+                    previous.put(neighbor, current);
+
+                    // Wir speichern die Richtung, die wir von 'current' genommen haben
+                    moveDir.put(neighbor, dir);
+                    queue.add(neighbor);
                 }
-
-                // Besuch markieren und Herkunft (Knoten + Richtung) merken
-                previous.put(neighbor, current);
-                directionTaken.put(neighbor, entry.getKey());
-
-                if (goalPredicate.test(neighbor)) {
-                    // Ziel gefunden -> Pfad rekonstruieren und zurückgeben.
-                    return buildPath(start, neighbor, previous, directionTaken);
-                }
-
-                // Nichts gefunden weiter suchen, machste nichts, steckste nicht drin
-                queue.offer(neighbor);
             }
         }
-
-        // Es gibt kein Pfad, alles eine große Verschwörung
-        return Collections.emptyList();
+        return null;
     }
 
-    /**
-     * Rekonstruiert den Pfad vom Start zum Ziel aus den Strukturen der BFS
-     * läuft rückwärts vom Ziel zum Start und sammelt dabei die genommenen Richtungen
-     * kehrt sie am Ende um (Start -> Ziel) und liefert die Liste zurück
-     */
-    private List<Direction> buildPath(
-        Cell start, Cell goal, Map<Cell, Cell> previous, Map<Cell, Direction> directionTaken
-    ) {
-        List<Direction> path = new ArrayList<>();
-        Cell current = goal;
+    public Direction nextDirectionTowards(Position start, Position target) {
+        return nextDirectionTowards(start, p -> p.equals(target));
+    }
 
-        while (!current.equals(start)) {
-            Direction direction = directionTaken.get(current);
+    private Direction reconstructFirstStep(Position start, Position end, Map<Position, Position> prev, Map<Position, Direction> dirs) {
+        Position curr = end;
+        Direction firstMove = null;
 
-            if (direction == null) {
-                return Collections.emptyList();
-            }
+        // Wir laufen rückwärts vom Ziel zum Start
+        while (!curr.equals(start)) {
+            Position parent = prev.get(curr);
+            // Die Richtung, die vom Parent zu curr führte
+            firstMove = dirs.get(curr);
+            curr = parent;
+        }
+        return firstMove;
+    }
 
-            path.add(direction);
-            current = previous.get(current);
+    // --- Getter & Helper ---
 
-            if (current == null) {
-                return Collections.emptyList();
+    public Position getFormPosition(int id) { return knownForms.get(id); }
+    public Position getFinishPosition() { return finishPosition; }
+    public List<Position> getKnownSheets() { return knownSheets; } // Rückgabetyp korrigiert auf List<Position>
+
+    public boolean isSheet(Position pos) {
+        return knownSheets.contains(pos);
+    }
+
+    public boolean isVisited(Position pos) { return visited.contains(pos); }
+
+    public boolean isUnknown(Position pos) { return !grid.containsKey(pos); }
+
+    public boolean isCrowded(Position pos) {
+        int crowdedNeighbors = 0;
+        for (Direction d : Direction.values()) {
+            Position n = calculatePosition(pos, d);
+            Byte type = grid.get(n);
+            // Wand oder besucht zählt als "eng"
+            if ((type != null && type == 2) || visited.contains(n)) {
+                crowdedNeighbors++;
             }
         }
-
-        Collections.reverse(path);
-        return path;
+        return crowdedNeighbors > 1; // Mehr als 1 Hindernis -> Eng
     }
 
-    public int getPlayerId() {
-        return playerId;
+    // Symmetrie Berechnung
+    public Position predictSymmetricPosition(Position source) {
+        if (minX == Integer.MAX_VALUE || maxX == Integer.MIN_VALUE) return null;
+        int symX = (maxX + minX) - source.x();
+        int symY = (maxY + minY) - source.y();
+        return new Position(symX, symY);
     }
 }

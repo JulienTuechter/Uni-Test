@@ -2,13 +2,7 @@ package de.fhmaze.runner;
 
 import de.fhmaze.bot.game.BotPlayerFactory;
 import de.fhmaze.bot.game.BotPlayerFactory.BotStrategyProvider;
-import de.fhmaze.bot.strategy.AvoidanceStrategy;
-import de.fhmaze.bot.strategy.BacktrackStrategy;
-import de.fhmaze.bot.strategy.BotStrategy;
-import de.fhmaze.bot.strategy.ExplorationStrategy;
-import de.fhmaze.bot.strategy.FallbackStrategy;
-import de.fhmaze.bot.strategy.KickStrategy;
-import de.fhmaze.bot.strategy.NavigationStrategy;
+import de.fhmaze.bot.strategy.*;
 import de.fhmaze.communication.protocol.ProtocolFactory;
 import de.fhmaze.console.io.ConsoleGameIOFactory;
 import de.fhmaze.engine.game.Game;
@@ -16,6 +10,7 @@ import de.fhmaze.engine.game.player.PlayerFactory;
 import de.fhmaze.engine.io.GameIOFactory;
 import de.fhmaze.engine.io.GameLogger;
 import de.fhmaze.plaintext.protocol.PlainTextProtocolFactory;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,11 +36,12 @@ public class GameRunner {
     private static PlayerFactory createPlayerFactory() {
         BotStrategyProvider strategyProvider = level -> {
             List<BotStrategy> strategies = new ArrayList<>();
-            strategies.add(new NavigationStrategy());
-            if (level >= 4) {
-                strategies.add(new KickStrategy());
-            }
             strategies.add(new AvoidanceStrategy());
+            if (level > 3)
+                strategies.add(new KickStrategy());
+            if (level > 4)
+                strategies.add(new SheetStrategy());
+            strategies.add(new NavigationStrategy());
             strategies.add(new ExplorationStrategy());
             strategies.add(new BacktrackStrategy());
             strategies.add(new FallbackStrategy());

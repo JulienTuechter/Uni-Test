@@ -79,4 +79,5 @@ public abstract class Player implements TurnListener {
     public int getSheetCount() {
         return sheetCount;
     }
+
 }
