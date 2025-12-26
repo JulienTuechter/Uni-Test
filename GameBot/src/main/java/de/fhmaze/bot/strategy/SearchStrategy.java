@@ -1,19 +1,21 @@
 package de.fhmaze.bot.strategy;
 
-import de.fhmaze.bot.game.BotKnowledge;
 import de.fhmaze.bot.game.BotPlayer;
 import de.fhmaze.engine.action.Action;
 import de.fhmaze.engine.action.GoAction;
-import de.fhmaze.engine.action.TakeAction;
 import de.fhmaze.engine.common.Direction;
-import de.fhmaze.engine.common.Position;
+import de.fhmaze.engine.game.cell.Cell;
+import de.fhmaze.engine.game.cell.Form;
 
 /**
- * Verantwortlich für das Finden von Zielen, wenn deren genaue Position unklar ist.
- * Nutzt Sheets, Symmetrie und Umgebungssuche.
+ * Such-Strategie: Der Bot sucht aktiv nach einer Form, die verschoben wurde.
  */
 public class SearchStrategy implements BotStrategy {
+    /** Maximale Suchtiefe (Anzahl der Schritte) */
+    private static final int MAX_SEARCH_DEPTH = 5;
+
     private final int targetFormId;
+    private int searchAttempts;
 
     public SearchStrategy(int targetFormId) {
         this.targetFormId = targetFormId;
@@ -21,39 +23,51 @@ public class SearchStrategy implements BotStrategy {
 
     @Override
     public Action suggestAction(BotPlayer player) {
-        BotKnowledge knowledge = player.getKnowledge();
-        Position currentPos = player.getPosition();
+        int playerId = player.getId();
 
-        // 1. Stehen wir auf einem Sheet? Aufdecken!
-        if (knowledge.isSheet(currentPos)) {
-            // Versuch das Sheet aufzunehmen/aufzudecken
-            return new TakeAction();
+        // Wenn die Suche zu lange dauert dann abbrechen
+        if (searchAttempts >= MAX_SEARCH_DEPTH) {
+            return null;
         }
 
-        // 2. Wissen wir, wo die Form ist? (Wurde vielleicht von NavStrategy nicht gefunden weil Weg blockiert)
-        Position knownPos = knowledge.getFormPosition(targetFormId);
-        if (knownPos != null) {
-            // Wegberechnung dahin versuchen (selbst wenn NavigationStrategy scheiterte, vllt neuer Weg?)
-            Direction dir = knowledge.nextDirectionTowards(currentPos, knownPos);
-            if (dir != null) return new GoAction(dir);
+        searchAttempts++;
+
+        // In der Nachbarschaft nach der Form suchen
+        for (Direction direction : Direction.values()) {
+            Cell neighborCell = player.getNeighborCell(direction);
+            if (neighborCell == null) continue;
+
+            if (isTargetForm(neighborCell, playerId) && !neighborCell.hasEnemy()) {
+                return new GoAction(direction);
+            }
         }
 
-        // 3. Symmetrie nutzen: Wo starteten wir? Wo ist das symmetrische Gegenstück?
-        // Annahme: Form 1 liegt oft punktsymmetrisch zu Form 1 des Gegners oder Startpunkten.
-        // Einfacherer Ansatz: Suche symmetrisch zu bereits gefundenen eigenen Punkten.
-        // Wenn wir noch gar nichts wissen, erkunden wir Sheets.
-
-        // Suche gezielt nach Sheets (potenzielle Verstecke)
-        Direction sheetDir = knowledge.nextDirectionTowards(currentPos, knowledge::isSheet);
-        if (sheetDir != null) {
-            return new GoAction(sheetDir);
+        // Über BotKnowledge navigieren (falls Form bekannt, aber verschoben)
+        Cell formCell = player.getKnowledge().getForm(targetFormId);
+        if (isTargetForm(formCell, playerId)) {
+            Direction direction = player.getKnowledge()
+                .nextDirectionTowards(player.getCurrentCell(), formCell);
+            if (direction != null) {
+                Cell targetCell = player.getNeighborCell(direction);
+                if (targetCell != null && !targetCell.hasEnemy()) {
+                    return new GoAction(direction);
+                }
+            }
         }
 
-        // 4. Verschobene Form suchen (lokale Umgebung scannen)
-        // Falls wir dachten, sie sei hier, aber sie ist weg -> Spiral search oder Random walk
-        // Dies wird teilweise durch Exploration abgedeckt.
+        return null;
+    }
 
-        return null; // Fallback an ExplorationStrategy
+    public void reset() {
+        searchAttempts = 0;
+    }
+
+    private boolean isTargetForm(Cell cell, int playerId) {
+        if (cell == null || !cell.hasForm()) {
+            return false;
+        }
+        Form form = cell.getForm();
+        return form != null && form.takeable(playerId, targetFormId);
     }
 
     @Override

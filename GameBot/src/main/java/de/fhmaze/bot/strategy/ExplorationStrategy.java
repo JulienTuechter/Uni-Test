@@ -5,40 +5,36 @@ import de.fhmaze.bot.game.BotPlayer;
 import de.fhmaze.engine.action.Action;
 import de.fhmaze.engine.action.GoAction;
 import de.fhmaze.engine.common.Direction;
-import de.fhmaze.engine.common.Position;
+import de.fhmaze.engine.game.cell.Cell;
 
 /**
- * Erkundet die Karte und bevorzugt offene Bereiche (Abstand zu Wänden/Pfaden).
+ * Explorations-Strategie: Der Bot erkundet die Umgebung und versucht,
+ * neue Zellen zu entdecken (Forms, Finish, freie Wege).
  */
 public class ExplorationStrategy implements BotStrategy {
     @Override
     public Action suggestAction(BotPlayer player) {
+        Cell currentCell = player.getCurrentCell();
         BotKnowledge knowledge = player.getKnowledge();
-        Position currentPos = player.getPosition();
 
-        // Suche den nächsten unbekannten Punkt, der "wertvoll" ist
-        Direction bestDir = knowledge.nextDirectionTowards(currentPos, pos -> {
-            // Zielbedingung für BFS: Eine unbekannte Zelle oder eine besuchte Zelle mit unbekannten Nachbarn
-            // Wir suchen hier nach einer 'Frontier'-Zelle
-
-            if (!knowledge.isUnknown(pos) && !knowledge.isVisited(pos)) {
-                // Das ist eine gesehene aber nicht betretene Zelle
-                // Prüfen ob sie "crowded" ist (zu nah an Wänden)
-                return !knowledge.isCrowded(pos);
+        // Direkte unbesuchte Nachbarn bevorzugen
+        for (Direction direction : Direction.values()) {
+            Cell neighborCell = player.getNeighborCell(direction);
+            if (
+                neighborCell != null && neighborCell.isVisitable()
+                    && !neighborCell.isVisited() && !neighborCell.hasEnemy()
+            ) {
+                return new GoAction(direction);
             }
-            return false;
-        });
-
-        if (bestDir != null) {
-            return new GoAction(bestDir);
         }
 
-        // Fallback: Einfach irgendeine unbekannte/unbesuchte Zelle suchen
-        bestDir = knowledge.nextDirectionTowards(currentPos,
-            pos -> !knowledge.isUnknown(pos) && !knowledge.isVisited(pos));
-
-        if (bestDir != null) {
-            return new GoAction(bestDir);
+        // Über bekanntes Wissen zur nächsten unbesuchten Zelle navigieren
+        Direction explorationDirection = knowledge.nextDirectionToUnvisited(currentCell);
+        if (explorationDirection != null) {
+            Cell targetCell = player.getNeighborCell(explorationDirection);
+            if (targetCell != null && !targetCell.hasEnemy()) {
+                return new GoAction(explorationDirection);
+            }
         }
 
         return null;
@@ -46,6 +42,6 @@ public class ExplorationStrategy implements BotStrategy {
 
     @Override
     public String toString() {
-        return "Exploration (Smart)";
+        return "Exploration";
     }
 }

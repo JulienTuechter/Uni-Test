@@ -67,7 +67,7 @@ public class BotPlayer extends Player {
         logger.logMessage("Position: %s", getPosition());
 
         // Umgebung beobachten
-        knowledge.observeEnvironment(getPosition(), getCurrentCell(), getNeighborCells());
+        knowledge.observeEnvironment(currentCell, neighborCells);
 
         // Strategien der Reihe nach durchprobieren (Chain of Responsibility)
         for (BotStrategy strategy : strategies) {

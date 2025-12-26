@@ -108,7 +108,7 @@ class BotPlayerTest {
         assertEquals(Direction.SOUTH, ((GoAction) action).direction());
     }
 
-    //@Test
+    @Test
     void testChooseNextActionGoActionNonOccupied() {
         // Arrange
         Cell[] neighbours = new Cell[] {
@@ -186,7 +186,7 @@ class BotPlayerTest {
         assertNotEquals(KickAction.class, action.getClass());
     }
 
-    //@Test
+    @Test
     void testChooseNextActionNoKickActionWhenTargetOccupied() {
         // Arrange
         Cell currentCell = new Cell(new FormCellStatus(2, 1));
