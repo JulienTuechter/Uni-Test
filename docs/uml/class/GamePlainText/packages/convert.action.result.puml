@@ -1,0 +1,23 @@
+@startuml convert.action.result
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram imcludes
+!include ../../GameCommunication/packages/convert.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(plaintext.convert.action.result) {
+    abstract class SuccessActionResultConverter<T: SuccessActionResult> <<abstract>> {
+        + serialize(successResult: T): String
+    }
+    communication.convert.Converter <|.. SuccessActionResultConverter
+
+    abstract class FailureActionResultConverter<T: FailureActionResult> <<abstract>> {
+        + serialize(failureResult: T): String
+    }
+    communication.convert.Converter <|.. FailureActionResultConverter
+}
+
+@enduml

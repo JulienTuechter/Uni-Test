@@ -1,0 +1,47 @@
+@startuml status.visitable
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram includes
+!include status.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(engine.status.visitable) {
+    class FloorCellStatus <<leaf>> {
+        + FloorCellStatus(enemyDistance: int)
+        + FloorCellStatus()
+    }
+    engine.status.VisitableCellStatus <|-- FloorCellStatus
+
+    class FormCellStatus <<leaf>> {
+        - playerId: int {readOnly}
+        - formId: int {readOnly}
+        --
+        + FormCellStatus(playerId: int, formId: int, enemyDistance: int)
+        + FormCellStatus(playerId: int, formId: int)
+        + getPlayerId(): int
+        + getFormId(): int
+    }
+    engine.status.VisitableCellStatus <|-- FormCellStatus
+
+    class SheetCellStatus <<leaf>> {
+        + SheetCellStatus(enemyDistance: int)
+        + SheetCellStatus()
+    }
+    engine.status.VisitableCellStatus <|-- SheetCellStatus
+
+    class FinishCellStatus <<leaf>> {
+        - playerId: int {readOnly}
+        - formCount: int {readOnly}
+        --
+        + FinishCellStatus(playerId: int, formCount: int, enemyDistance: int)
+        + FinishCellStatus(playerId: int, formCount: int)
+        + getPlayerId(): int
+        + getFormCount(): int
+    }
+    engine.status.VisitableCellStatus <|-- FinishCellStatus
+}
+
+@enduml

@@ -1,0 +1,7 @@
+@startuml bot
+
+' diagram includes
+!include packages/game.puml
+!include packages/strategy.puml
+
+@enduml

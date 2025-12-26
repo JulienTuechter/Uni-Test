@@ -1,0 +1,8 @@
+@startuml communication
+
+' diagram includes
+!include packages/convert.puml
+!include packages/protocol.puml
+!include packages/registry.puml
+
+@enduml

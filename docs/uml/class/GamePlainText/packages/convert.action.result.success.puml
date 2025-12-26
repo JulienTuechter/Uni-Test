@@ -1,0 +1,43 @@
+@startuml convert.action.result.success
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram imcludes
+!include convert.action.result.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(plaintext.convert.action.result.success) {
+    class OkayActionResultConverter {
+        + serialize(okayResult: OkayActionResult): String
+        + parse(data: String): OkayActionResult
+    }
+    plaintext.convert.action.result.SuccessActionResultConverter <|-- OkayActionResultConverter : <<bind>> <T -> OkayActionResult>
+
+    class PositionActionResultConverter {
+        + serialize(positionResult: PositionActionResult): String
+        + parse(data: String): PositionActionResult
+    }
+    plaintext.convert.action.result.SuccessActionResultConverter <|-- PositionActionResultConverter : <<bind>> <T -> PositionActionResult>
+
+    class DirectionActionResultConverter {
+        + serialize(directionResult: DirectionActionResult): String
+        + parse(data: String): DirectionActionResult
+    }
+    plaintext.convert.action.result.SuccessActionResultConverter <|-- DirectionActionResultConverter : <<bind>> <T -> DirectionActionResult>
+
+    class FormActionResultConverter {
+        + serialize(formResult: FormActionResult): String
+        + parse(data: String): FormActionResult
+    }
+    plaintext.convert.action.result.SuccessActionResultConverter <|-- FormActionResultConverter : <<bind>> <T -> FormActionResult>
+
+    class SheetActionResultConverter {
+        + serialize(sheetResult: SheetActionResult): String
+        + parse(data: String): SheetActionResult
+    }
+    plaintext.convert.action.result.SuccessActionResultConverter <|-- SheetActionResultConverter : <<bind>> <T -> SheetActionResult>
+}
+
+@enduml

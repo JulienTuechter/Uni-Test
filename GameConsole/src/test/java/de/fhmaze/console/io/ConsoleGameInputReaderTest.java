@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import de.fhmaze.communication.convert.Parser;
 import de.fhmaze.engine.action.result.ActionResult;
-import de.fhmaze.engine.action.result.DirectionActionResult;
+import de.fhmaze.engine.action.result.success.DirectionActionResult;
 import de.fhmaze.engine.common.Direction;
 import de.fhmaze.engine.common.Position;
 import de.fhmaze.engine.init.MazeInfo;
 import de.fhmaze.engine.init.PlayerInfo;
 import de.fhmaze.engine.status.CellStatus;
-import de.fhmaze.engine.status.FloorCellStatus;
+import de.fhmaze.engine.status.visitable.FloorCellStatus;
 import de.fhmaze.engine.turn.TurnInfo;
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -42,32 +42,31 @@ class ConsoleGameInputReaderTest {
     @Test
     void testReadMazeInfo() throws IOException {
         // Arrange
+        MazeInfo expected = new MazeInfo(10, 20, 3);
         String input = "10 20 3\n";
         out.write(input.getBytes());
         out.flush();
 
         // Act
-        MazeInfo mazeInfo = reader.readMazeInfo();
+        MazeInfo actual = reader.readMazeInfo();
 
         // Assert
-        assertEquals(10, mazeInfo.sizeX());
-        assertEquals(20, mazeInfo.sizeY());
-        assertEquals(3, mazeInfo.level());
+        assertEquals(expected, actual);
     }
 
     @Test
     void testReadPlayerInfo() throws IOException {
         // Arrange
-        String data = "5 15 25 0 \n";
+        PlayerInfo expected = new PlayerInfo(5, new Position(15, 25), 10);
+        String data = "5 15 25 10\n";
         out.write(data.getBytes());
         out.flush();
 
         // Act
-        PlayerInfo playerInfo = reader.readPlayerInfo();
+        PlayerInfo actual = reader.readPlayerInfo();
 
         // Assert
-        assertEquals(5, playerInfo.id());
-        assertEquals(new Position(15, 25), playerInfo.start());
+        assertEquals(expected, actual);
     }
 
     @Test

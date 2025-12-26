@@ -11,7 +11,6 @@ public abstract class Player implements TurnListener {
     private final int id;
 
     private final Maze maze;
-
     private Position position;
     private Direction direction;
 

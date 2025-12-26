@@ -1,13 +1,11 @@
 package de.fhmaze.plaintext.convert.status;
 
 import de.fhmaze.communication.convert.Converter;
-import de.fhmaze.engine.status.CellStatus;
 import de.fhmaze.engine.status.VisitableCellStatus;
 
-public abstract class VisitableCellStatusConverter implements Converter<CellStatus> {
+public abstract class VisitableCellStatusConverter<T extends VisitableCellStatus> implements Converter<T> {
     @Override
-    public String serialize(CellStatus cellStatus) {
-        VisitableCellStatus visitableStatus = (VisitableCellStatus) cellStatus;
+    public String serialize(T visitableStatus) {
         if (visitableStatus.hasNoEnemyInfo())
             return "";
         else if (visitableStatus.hasEnemy())
@@ -16,18 +14,16 @@ public abstract class VisitableCellStatusConverter implements Converter<CellStat
             return " !" + visitableStatus.getEnemyDistance();
     }
 
-    <T extends VisitableCellStatus> T parse(
-        String[] parts, int enemyIndex, VisitableCellStatusProvider<T> visitableCellStatusProvider
-    ) {
+    protected T parse(String[] parts, int enemyIndex, VisitableCellStatusProvider<T> provider) {
         if (parts.length > enemyIndex) {
             if (parts[enemyIndex].length() > 1) {
                 int enemyDistance = Integer.parseInt(parts[enemyIndex].substring(1));
-                return visitableCellStatusProvider.create(enemyDistance);
+                return provider.create(enemyDistance);
             } else {
-                return visitableCellStatusProvider.create(0);
+                return provider.create(0);
             }
         }
-        return visitableCellStatusProvider.create(-1);
+        return provider.create(-1);
     }
 
     @FunctionalInterface

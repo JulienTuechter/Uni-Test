@@ -1,0 +1,11 @@
+@startuml se
+
+' diagram includes
+!include GameEngine/engine.puml
+!include GameCommunication/communication.puml
+!include GamePlainText/plaintext.puml
+!include GameConsole/console.puml
+!include GameBot/bot.puml
+!include GameRunner/runner.puml
+
+@enduml

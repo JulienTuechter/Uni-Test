@@ -1,0 +1,68 @@
+@startuml game.player
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram includes
+!include common.puml
+!include game.cell.puml
+!include turn.listener.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(engine.game.player) {
+    abstract class Player <<abstract>> {
+        - id: int {readOnly}
+        - formCount: int
+        - sheetCount: int
+        --
+        + Player(params: PlayerParams)
+        + getId(): int
+        + chooseNextAction(): Action {abstract}
+        ~ goDirection(direction: Direction): void
+        + getPosition(): Position
+        + getDirection(): Direction
+        + getMaze(): Maze
+        + getCurrentCell(): Cell
+        + getNeighborCells(): Cell[]
+        + getNeighborCell(direction: Direction): Cell
+        ~ takeForm(): void
+        + getFormCount(): int
+        ~ takeSheet(): void
+        ~ putSheet(): void
+        + getSheetCount(): int
+    }
+    engine.turn.listener.TurnListener <|.. Player
+    Player --> "1" engine.game.cell.Maze : - maze: Maze {readOnly}
+    Player --> "1" engine.common.Position : - position: Position
+    Player --> "1" engine.common.Direction : - direction: Direction
+
+    interface PlayerFactory <<interface>> {
+        + createPlayer(params: PlayerParams): Player {abstract}
+    }
+
+    class PlayerParams <<leaf>> {
+        - id: int {readOnly}
+        - sheetCount: int {readOnly}
+        --
+        + PlayerParams(id: int, start: Position, sheetCount: int, maze: Maze)
+        + id(): int
+        + start(): Position
+        + sheetCount(): int
+        + maze(): Maze
+    }
+    PlayerParams --> "1" engine.common.Position : - start: Position {readOnly}
+    PlayerParams --> "1" engine.game.cell.Maze : - maze: Maze {readOnly}
+
+    class PlayerTurnHandler {
+        + PlayerTurnHandler(player: Player)
+        + onTurnSuccess(action: Action, result: ActionResult): void
+        - handleGoAction(goAction: GoAction): void
+        - handleTakeAction(result: ActionResult): void
+        - handlePutAction(): void
+    }
+    engine.turn.listener.TurnListener <|.. PlayerTurnHandler
+    PlayerTurnHandler ..> "1" Player : - player: Player {readOnly}
+}
+
+@enduml

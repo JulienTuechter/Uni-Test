@@ -1,10 +1,10 @@
 package de.fhmaze.engine.game.cell;
 
 import de.fhmaze.engine.status.CellStatus;
-import de.fhmaze.engine.status.FinishCellStatus;
-import de.fhmaze.engine.status.FormCellStatus;
-import de.fhmaze.engine.status.SheetCellStatus;
 import de.fhmaze.engine.status.VisitableCellStatus;
+import de.fhmaze.engine.status.visitable.FinishCellStatus;
+import de.fhmaze.engine.status.visitable.FormCellStatus;
+import de.fhmaze.engine.status.visitable.SheetCellStatus;
 
 public class Cell {
     private CellStatus status;

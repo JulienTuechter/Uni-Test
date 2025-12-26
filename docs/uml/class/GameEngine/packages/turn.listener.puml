@@ -1,0 +1,20 @@
+@startuml turn.listener
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(engine.turn.listener) {
+    interface TurnListener <<interface>> {
+        + onTurnSuccess(action: Action, result: ActionResult): void
+        + onTurnFailure(action: Action, result: ActionResult): void
+    }
+
+    interface CellStatusListener <<interface>> {
+        + onCellStatusUpdate(currentCellStatus: CellStatus,
+        neighborCellStatuses: CellStatus[]): void {abstract}
+    }
+}
+
+@enduml

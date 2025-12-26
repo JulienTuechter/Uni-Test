@@ -1,0 +1,36 @@
+@startuml io
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(engine.io) {
+    interface GameIOFactory <<interface>> {
+        + createGameInputReader(): GameInputReader {abstract}
+        + createActionSender(): ActionSender {abstract}
+        + createGameLogger(): GameLogger {abstract}
+    }
+
+    interface GameInputReader <<interface>> {
+        + readMazeInfo(): MazeInfo {abstract}
+        + readPlayerInfo(): PlayerInfo {abstract}
+        + hasNextTurn(): boolean {abstract}
+        + readTurnInfo(): TurnInfo {abstract}
+        + close(): void {abstract}
+    }
+
+    interface ActionSender <<interface>> {
+        + sendAction(action: Action): void {abstract}
+    }
+
+    interface GameLogger <<interface>> {
+        + logMessage(message: String, args: Object...): void {abstract}
+        + logLastActionResult(lastActionResult: ActionResult): void {abstract}
+        + logCurrentCell(currentCell: Cell): void {abstract}
+        + logNeighborCells(neighborCells: Cell[]): void {abstract}
+        + logMaze(maze: Maze, currentCell: Cell): void {abstract}
+    }
+}
+
+@enduml

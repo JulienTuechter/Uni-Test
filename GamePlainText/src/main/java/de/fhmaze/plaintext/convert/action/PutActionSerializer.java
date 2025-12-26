@@ -1,11 +1,11 @@
 package de.fhmaze.plaintext.convert.action;
 
 import de.fhmaze.communication.convert.Serializer;
-import de.fhmaze.engine.action.Action;
+import de.fhmaze.engine.action.PutAction;
 
-public class PutActionSerializer implements Serializer<Action> {
+public class PutActionSerializer implements Serializer<PutAction> {
     @Override
-    public String serialize(Action action) {
+    public String serialize(PutAction putAction) {
         return "put";
     }
 }

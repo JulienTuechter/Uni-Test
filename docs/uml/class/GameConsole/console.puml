@@ -1,0 +1,6 @@
+@startuml console
+
+' diagram includes
+!include packages/io.puml
+
+@enduml

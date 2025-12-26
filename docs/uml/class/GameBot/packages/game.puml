@@ -1,0 +1,70 @@
+@startuml game
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram includes
+!include ../../GameEngine/packages/common.puml
+!include ../../GameEngine/packages/game.cell.puml
+!include ../../GameEngine/packages/game.player.puml
+!include ../../GameEngine/packages/io.puml
+!include strategy.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(bot.game) {
+    class BotKnowledge {
+        - playerId: int {readOnly}
+        - knownForms: Map<Integer, Cell> {readOnly}
+        - adjacency: Map<Cell, Map<Direction, Cell>> {readOnly}
+        --
+        + BotKnowledge(playerId: int)
+        + observeEnvironment(currentCell: Cell, neighborCells: Cell[]): void
+        + getForm(formId: int): Cell
+        + getFinishCell(): Cell
+        + nextDirectionTowards(start: Cell, target: Cell): Direction
+        + nextDirectionToUnvisited(start: Cell): Direction
+        + searchDisplacedForm(formId: int, expectedCell: Cell): Cell
+        + updateFormPosition(formId: int, newCell: Cell): void
+        - observeCell(cell: Cell): void
+        - shortestPath(start: Cell, goal: Cell): List<Direction>
+        - shortestPath(start: Cell,
+        goalPredicate: Predicate<Cell>): List<Direction>
+        - buildPath(start: Cell, goal: Cell,
+        previous: Map<Cell, Cell>,
+        directionTaken: Map<Cell, Direction>): List<Direction>
+        + getPlayerId(): int
+    }
+    BotKnowledge --> "1" engine.game.cell.Cell : - finishCell: Cell
+
+    class BotPlayer {
+        + BotPlayer(params: PlayerParams, strategies: List<BotStrategy>,
+        logger: GameLogger)
+        + onTurnSuccess(action: Action, result: ActionResult): void
+        + chooseNextAction(): Action {abstract}
+        + getPath(): Stack<Cell>
+        + getTurns(): Stack<Direction>
+        + getKnowledge(): BotKnowledge
+        + getLogger(): GameLogger
+    }
+    engine.game.player.Player <|-- BotPlayer
+    BotPlayer --> "*" engine.game.cell.Cell : - path: Stack<Cell> {readOnly}
+    BotPlayer --> "*" engine.common.Direction : - turns: Stack<Direction> {readOnly}
+    BotPlayer o-- "*" bot.strategy.BotStrategy : - strategies: List<BotStrategy> {readOnly}
+    BotPlayer *-- "1" BotKnowledge : - knowledge: BotKnowledge {readOnly}
+    BotPlayer --> "1" engine.io.GameLogger : - logger: GameLogger {readOnly}
+
+    class BotPlayerFactory {
+        + BotPlayerFactory(strategyProvider: BotStrategyProvider, logger: GameLogger)
+        + createPlayer(params: PlayerParams): BotPlayer
+    }
+    engine.game.player.PlayerFactory <|.. BotPlayerFactory
+    BotPlayerFactory --> "1" BotStrategyProvider : - strategyProvider: BotStrategyProvider {readOnly}
+    BotPlayerFactory --> "1" engine.io.GameLogger : - logger: GameLogger {readOnly}
+
+    interface BotStrategyProvider <<interface>> {
+        + getStrategies(level: int): List<BotStrategy>
+    }
+}
+
+@enduml

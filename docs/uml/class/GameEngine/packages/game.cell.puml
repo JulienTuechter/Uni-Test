@@ -1,0 +1,87 @@
+@startuml game.cell
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram includes
+!include game.player.puml
+!include status.puml
+!include turn.listener.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(engine.game.cell) {
+    class Cell {
+        - visited: boolean
+        --
+        + Cell(status: CellStatus)
+        # setStatus(status: CellStatus): void
+        + getStatus(): CellStatus
+        # visit(): void
+        + isVisited(): boolean
+        + isVisitable(): boolean
+        + hasEnemy(): boolean
+        + hasEnemyInSight(): boolean
+        + hasNoEnemyInfo(): boolean
+        + getEnemyDistance(): int
+        + hasForm(): boolean
+        + getForm(): Form
+        + hasSheet(): boolean
+        + getSheet(): Sheet
+        + hasFinish(): boolean
+        + getFinish(): Finish
+    }
+    Cell o-- "1" engine.status.CellStatus : - status: CellStatus
+
+    class CellTurnHandler {
+        + CellTurnHandler(player: Player)
+        + onTurnSuccess(action: Action, result: ActionResult): void
+        + onCellStatusUpdate(currentCellStatus: CellStatus,
+        neighborCellStatuses: CellStatus[]): void
+    }
+    engine.turn.listener.TurnListener <|.. CellTurnHandler
+    engine.turn.listener.CellStatusListener <|.. CellTurnHandler
+    CellTurnHandler ..> "1" engine.game.player.Player : - player: Player {readOnly}
+
+    class Form <<leaf>> {
+        - playerId: int
+        - formId: int
+        --
+        + Form(playerId: int, formId: int)
+        + takeable(playerId: int, formCount: int): boolean
+        + takeable(player: Player): boolean
+        + playerId(): int
+        + formId(): int
+    }
+
+    class Sheet <<leaf>>
+
+    class Finish <<leaf>> {
+        - playerId: int
+        - formCount: int
+        --
+        + Finish(playerId: int, formCount: int)
+        + finishable(playerId: int, formCount: int): boolean
+        + finishable(player: Player): boolean
+        + playerId(): int
+        + formCount(): int
+    }
+
+    class Maze {
+        - level: int {readOnly}
+        --
+        + Maze(sizeX: int, sizeY: int, level: int)
+        + getNeighborCells(position: Position): Cell[]
+        + getNeighborCell(position: Position, direction: Direction): Cell
+        + getCell(position: Position): Cell
+        + getNeighborPosition(position: Position, direction: Direction): Position
+        - getNeighborX(x: int, direction: Direction): int
+        - getNeighborY(y: int, direction: Direction): int
+        + getSizeX(): int
+        + getSizeY(): int
+        + getLevel(): int
+    }
+    Maze *-- "*" Cell : - cells: Cell[][] {readOnly}
+}
+
+@enduml

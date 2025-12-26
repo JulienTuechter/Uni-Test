@@ -73,34 +73,11 @@ public class NavigationStrategy implements BotStrategy {
             if (direction != null && !player.getNeighborCell(direction).hasEnemy()) {
                 return new GoAction(direction);
             }
-        } else if (formCell != null) {
-            int level = player.getMaze().getLevel();
-
-            // Level 5: Form könnte von einem Sheet verdeckt sein
-            if (level >= 5 && knowledge.isFormCoveredBySheet(formCell, nextFormId)) {
-                Direction direction = knowledge.nextDirectionTowards(currentCell, formCell);
-                if (direction != null && !player.getNeighborCell(direction).hasEnemy()) {
-                    return new GoAction(direction);
-                }
-            }
-
-            // Level 4+: Form könnte gekickt worden sein
-            if (level >= 4) {
-                Cell displacedCell = knowledge.searchDisplacedForm(nextFormId, formCell);
-                if (displacedCell != null && isCellTakeable(displacedCell, playerId, formCount)) {
-                    Direction direction = knowledge.nextDirectionTowards(currentCell, displacedCell);
-                    if (direction != null && !player.getNeighborCell(direction).hasEnemy()) {
-                        return new GoAction(direction);
-                    }
-                }
-            }
-        }
-
-        // Level 5: Navigation zur verdeckten Finish-Zelle
-        if (player.getMaze().getLevel() >= 5) {
-            Cell finishCellForSheet = knowledge.getFinishCell();
-            if (finishCellForSheet != null && knowledge.isFinishCoveredBySheet(finishCellForSheet)) {
-                Direction direction = knowledge.nextDirectionTowards(currentCell, finishCellForSheet);
+        } else if (formCell != null && player.getMaze().getLevel() == 4) {
+            // suche nach gekickter Form in der Nachbarschaft, Form wurde gekickt
+            Cell displacedCell = knowledge.searchDisplacedForm(nextFormId, formCell);
+            if (displacedCell != null && isCellTakeable(displacedCell, playerId, formCount)) {
+                Direction direction = knowledge.nextDirectionTowards(currentCell, displacedCell);
                 if (direction != null && !player.getNeighborCell(direction).hasEnemy()) {
                     return new GoAction(direction);
                 }

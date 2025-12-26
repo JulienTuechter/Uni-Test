@@ -26,7 +26,7 @@ public class GameInitFactory implements InitFactory {
     @Override
     public Player createPlayer(PlayerInfo playerInfo) {
         Maze maze = mazeSupplier.get();
-        PlayerParams params = new PlayerParams(playerInfo.id(), playerInfo.start(), 0, maze);
+        PlayerParams params = new PlayerParams(playerInfo.id(), playerInfo.start(), playerInfo.sheetCount(), maze);
         return playerFactory.createPlayer(params);
     }
 }

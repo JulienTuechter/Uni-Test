@@ -1,7 +1,8 @@
 package de.fhmaze.plaintext.convert.action.result;
 
 import static org.junit.jupiter.api.Assertions.*;
-import de.fhmaze.engine.action.result.NotOkayActionResult;
+import de.fhmaze.engine.action.result.failure.NotOkayActionResult;
+import de.fhmaze.plaintext.convert.action.result.failure.NotOkayActionResultConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -39,7 +39,6 @@ public class ConsoleGameInputReader implements GameInputReader {
     public PlayerInfo readPlayerInfo() {
         int id = input.nextInt();
         Position start = new Position(input.nextInt(), input.nextInt());
-
         int sheetCount = input.hasNextInt() ? input.nextInt() : 0;
         input.nextLine();
         return new PlayerInfo(id, start, sheetCount);

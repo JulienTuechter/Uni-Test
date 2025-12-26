@@ -1,0 +1,33 @@
+@startuml convert.status.log.visitable
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram imcludes
+!include ../../GameCommunication/packages/convert.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(plaintext.convert.status.log.visitable) {
+    class LogFloorCellStatusSerializer {
+        + serialize(floorStatus: FloorCellStatus): String
+    }
+    communication.convert.Serializer <|.. LogFloorCellStatusSerializer : <<bind>> <T -> FloorCellStatus>
+
+    class LogFormCellStatusSerializer {
+        + serialize(formStatus: FormCellStatus): String
+    }
+    communication.convert.Serializer <|.. LogFormCellStatusSerializer : <<bind>> <T -> FormCellStatus>
+
+    class LogSheetCellStatusSerializer {
+        + serialize(sheetStatus: SheetCellStatus): String
+    }
+    communication.convert.Serializer <|.. LogSheetCellStatusSerializer : <<bind>> <T -> SheetCellStatus>
+
+    class LogFinishCellStatusSerializer {
+        + serialize(finishStatus: FinishCellStatus): String
+    }
+    communication.convert.Serializer <|.. LogFinishCellStatusSerializer : <<bind>> <T -> FinishCellStatus>
+}
+
+@enduml

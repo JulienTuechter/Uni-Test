@@ -1,7 +1,7 @@
 package de.fhmaze.engine.action;
 
 import de.fhmaze.engine.action.result.ActionResult;
-import de.fhmaze.engine.action.result.PositionActionResult;
+import de.fhmaze.engine.action.result.success.PositionActionResult;
 
 public record PositionAction() implements Action {
     @Override

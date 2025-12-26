@@ -1,0 +1,27 @@
+' string joining
+!define JOIN(a, b) ##a##b
+
+' get path of package file
+!function $path($package)
+    !$separator = %strpos($package, ".")
+    !if ($separator != -1)
+        !$name = %substr($package, $separator + 1)
+    !else
+        !$name = $package
+    !endif
+    !return JOIN($name, ".puml")
+!endfunction
+
+' get color based on package file
+!function $color($package)
+    !if (%filename() == $path($package))
+        !return "#LightGreen"
+    !else
+        !return "#00000008"
+    !endif
+!endfunction
+
+' create package (highlighted if preview file)
+!procedure $package($name)
+    package $name $color($name)
+!endprocedure

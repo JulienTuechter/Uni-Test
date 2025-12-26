@@ -20,10 +20,10 @@ import de.fhmaze.engine.game.cell.Cell;
 import de.fhmaze.engine.game.cell.Maze;
 import de.fhmaze.engine.game.player.PlayerParams;
 import de.fhmaze.engine.io.GameLogger;
-import de.fhmaze.engine.status.FinishCellStatus;
-import de.fhmaze.engine.status.FloorCellStatus;
-import de.fhmaze.engine.status.FormCellStatus;
 import de.fhmaze.engine.status.WallCellStatus;
+import de.fhmaze.engine.status.visitable.FinishCellStatus;
+import de.fhmaze.engine.status.visitable.FloorCellStatus;
+import de.fhmaze.engine.status.visitable.FormCellStatus;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,9 +45,7 @@ class BotPlayerTest {
 
     @BeforeEach
     void setUp() {
-        when(maze.getSizeX()).thenReturn(10);
-        when(maze.getSizeY()).thenReturn(10);
-        PlayerParams params = new PlayerParams(1, new Position(3, 2), 0, maze);
+        PlayerParams params = new PlayerParams(1, new Position(3, 2), 2, maze);
         strategies = new ArrayList<>();
         strategies.add(new NavigationStrategy());
         strategies.add(new KickStrategy());
@@ -63,10 +61,6 @@ class BotPlayerTest {
         // Arrange
         when(maze.getCell(player.getPosition()))
             .thenReturn(new Cell(new FinishCellStatus(1, 0)));
-        for (Direction direction : Direction.values()) {
-            when(maze.getNeighborPosition(player.getPosition(), direction))
-                .thenReturn(new Position(3 + direction.getDeltaX(), 2 + direction.getDeltaY()));
-        }
 
         // Act
         Action action = player.chooseNextAction();
@@ -80,10 +74,6 @@ class BotPlayerTest {
         // Arrange
         when(maze.getCell(player.getPosition()))
             .thenReturn(new Cell(new FormCellStatus(1, 1)));
-        for (Direction direction : Direction.values()) {
-            when(maze.getNeighborPosition(player.getPosition(), direction))
-                .thenReturn(new Position(3 + direction.getDeltaX(), 2 + direction.getDeltaY()));
-        }
 
         // Act
         Action action = player.chooseNextAction();
@@ -108,8 +98,6 @@ class BotPlayerTest {
         for (Direction direction : Direction.values()) {
             when(maze.getNeighborCell(player.getPosition(), direction))
                 .thenReturn(neighbours[direction.ordinal()]);
-            when(maze.getNeighborPosition(player.getPosition(), direction))
-                .thenReturn(new Position(3 + direction.getDeltaX(), 2 + direction.getDeltaY()));
         }
 
         // Act
@@ -136,8 +124,6 @@ class BotPlayerTest {
         for (Direction direction : Direction.values()) {
             when(maze.getNeighborCell(player.getPosition(), direction))
                 .thenReturn(neighbours[direction.ordinal()]);
-            when(maze.getNeighborPosition(player.getPosition(), direction))
-                .thenReturn(new Position(3 + direction.getDeltaX(), 2 + direction.getDeltaY()));
         }
 
         // Act
@@ -163,8 +149,6 @@ class BotPlayerTest {
         for (Direction direction : Direction.values()) {
             when(maze.getNeighborCell(player.getPosition(), direction))
                 .thenReturn(neighbors[direction.ordinal()]);
-            when(maze.getNeighborPosition(player.getPosition(), direction))
-                .thenReturn(new Position(3 + direction.getDeltaX(), 2 + direction.getDeltaY()));
         }
 
         // Act
@@ -192,8 +176,6 @@ class BotPlayerTest {
         for (Direction direction : Direction.values()) {
             when(maze.getNeighborCell(player.getPosition(), direction))
                 .thenReturn(neighbors[direction.ordinal()]);
-            when(maze.getNeighborPosition(player.getPosition(), direction))
-                .thenReturn(new Position(3 + direction.getDeltaX(), 2 + direction.getDeltaY()));
         }
 
         // Act
@@ -217,10 +199,6 @@ class BotPlayerTest {
         when(maze.getNeighborCells(player.getPosition())).thenReturn(neighbors);
         when(maze.getNeighborCell(player.getPosition(), Direction.NORTH)).thenReturn(northCell);
         when(maze.getNeighborCell(player.getPosition(), Direction.EAST)).thenReturn(eastCell);
-        for (Direction direction : Direction.values()) {
-            when(maze.getNeighborPosition(player.getPosition(), direction))
-                .thenReturn(new Position(3 + direction.getDeltaX(), 2 + direction.getDeltaY()));
-        }
 
         // Act
         Action action = player.chooseNextAction();

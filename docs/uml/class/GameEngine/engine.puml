@@ -1,0 +1,19 @@
+@startuml engine
+
+' diagram includes
+!include packages/action.puml
+!include packages/action.result.puml
+!include packages/action.result.success.puml
+!include packages/action.result.failure.puml
+!include packages/common.puml
+!include packages/game.puml
+!include packages/game.cell.puml
+!include packages/game.player.puml
+!include packages/init.puml
+!include packages/io.puml
+!include packages/status.puml
+!include packages/status.visitable.puml
+!include packages/turn.puml
+!include packages/turn.listener.puml
+
+@enduml

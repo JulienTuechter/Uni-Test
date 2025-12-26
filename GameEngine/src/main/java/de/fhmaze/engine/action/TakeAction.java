@@ -1,8 +1,8 @@
 package de.fhmaze.engine.action;
 
 import de.fhmaze.engine.action.result.ActionResult;
-import de.fhmaze.engine.action.result.FormActionResult;
-import de.fhmaze.engine.action.result.SheetActionResult;
+import de.fhmaze.engine.action.result.success.FormActionResult;
+import de.fhmaze.engine.action.result.success.SheetActionResult;
 
 public record TakeAction() implements Action {
     @Override

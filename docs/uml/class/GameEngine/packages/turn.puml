@@ -1,0 +1,41 @@
+@startuml turn
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram includes
+!include action.result.puml
+!include status.puml
+!include turn.listener.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(engine.turn) {
+    class TurnInfo <<leaf>> {
+        + TurnInfo(lastActionResult: ActionResult, currentCellStatus: CellStatus,
+            neighborCellStatuses: CellStatus[])
+        + lastActionResult(): ActionResult
+        + currentCellStatus(): CellStatus
+        + neighborCellStatuses(): CellStatus[]
+        + neighborCellStatus(direction: Direction): CellStatus
+    }
+    TurnInfo --> "1" engine.action.result.ActionResult : - lastActionResult: ActionResult {readOnly}
+    TurnInfo --> "1" engine.status.CellStatus : - currentCellStatus: CellStatus {readOnly}
+    TurnInfo --> "4" engine.status.CellStatus : - neighborCellStatuses: CellStatus[] {readOnly}
+
+    class TurnManager {
+        + addTurnListener(turnListener: TurnListener): void
+        + addTurnListeners(turnListeners: TurnListener...): void
+        - notifyTurnSuccess(action: Action, result: ActionResult): void
+        - notifyTurnFailure(action: Action, result: ActionResult): void
+        + addCellStatusListener(cellStatusListener: CellStatusListener): void
+        + addCellStatusListeners(cellStatusListeners: CellStatusListener...): void
+        - notifyCellStatusUpdate(currentCellStatus: CellStatus,
+        neighborCellStatuses: CellStatus[]): void
+        + process(lastAction: Action, turnInfo: TurnInfo): void
+    }
+    TurnManager o-- "*" engine.turn.listener.TurnListener : - turnListeners: List<TurnListener> {readOnly}
+    TurnManager o-- "*" engine.turn.listener.CellStatusListener : - cellStatusListeners: List<CellStatusListener> {readOnly}
+}
+
+@enduml

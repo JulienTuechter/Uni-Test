@@ -1,0 +1,14 @@
+@startuml plaintext
+
+' diagram includes
+!include packages/convert.action.puml
+!include packages/convert.action.result.puml
+!include packages/convert.action.result.success.puml
+!include packages/convert.action.result.failure.puml
+!include packages/convert.status.puml
+!include packages/convert.status.visitable.puml
+!include packages/convert.status.log.puml
+!include packages/convert.status.log.visitable.puml
+!include packages/protocol.puml
+
+@enduml

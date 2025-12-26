@@ -7,9 +7,9 @@ import de.fhmaze.engine.action.Action;
 import de.fhmaze.engine.action.GoAction;
 import de.fhmaze.engine.action.InitAction;
 import de.fhmaze.engine.action.result.ActionResult;
-import de.fhmaze.engine.action.result.DirectionActionResult;
-import de.fhmaze.engine.action.result.NotOkayActionResult;
-import de.fhmaze.engine.action.result.OkayActionResult;
+import de.fhmaze.engine.action.result.failure.NotOkayActionResult;
+import de.fhmaze.engine.action.result.success.DirectionActionResult;
+import de.fhmaze.engine.action.result.success.OkayActionResult;
 import de.fhmaze.engine.common.Direction;
 import de.fhmaze.engine.common.Position;
 import de.fhmaze.engine.game.cell.Cell;
@@ -25,8 +25,8 @@ import de.fhmaze.engine.io.GameIOFactory;
 import de.fhmaze.engine.io.GameInputReader;
 import de.fhmaze.engine.io.GameLogger;
 import de.fhmaze.engine.status.CellStatus;
-import de.fhmaze.engine.status.FloorCellStatus;
-import de.fhmaze.engine.status.FormCellStatus;
+import de.fhmaze.engine.status.visitable.FloorCellStatus;
+import de.fhmaze.engine.status.visitable.FormCellStatus;
 import de.fhmaze.engine.turn.TurnInfo;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -73,7 +73,7 @@ class GameTest {
         configureGameIOFactory();
         MazeInfo mazeInfo = new MazeInfo(12, 8, 3);
         configureMazeCreation(mazeInfo);
-        configurePlayerCreation(new PlayerInfo(2, new Position(4, 2), 0));
+        configurePlayerCreation(new PlayerInfo(2, new Position(4, 2), 3));
         configureTurns(0);
 
         // Act
@@ -91,7 +91,7 @@ class GameTest {
         // Arrange
         configureGameIOFactory();
         configureMazeCreation(new MazeInfo(12, 8, 3));
-        PlayerInfo playerInfo = new PlayerInfo(2, new Position(4, 2), 0);
+        PlayerInfo playerInfo = new PlayerInfo(2, new Position(4, 2), 3);
         configurePlayerCreation(playerInfo);
         configureTurns(0);
 
@@ -109,7 +109,7 @@ class GameTest {
         configureGameIOFactory();
         configureMazeCreation(new MazeInfo(12, 8, 3));
         Position start = new Position(4, 2);
-        configurePlayerCreation(new PlayerInfo(2, start, 0));
+        configurePlayerCreation(new PlayerInfo(2, start, 3));
         configureTurns(1, new TurnInfo(new OkayActionResult(), new FormCellStatus(2, 5), new CellStatus[4]));
         configurePlayerCells(start);
 
@@ -131,7 +131,7 @@ class GameTest {
         configureGameIOFactory();
         configureMazeCreation(new MazeInfo(12, 8, 3));
         Position start = new Position(4, 2);
-        configurePlayerCreation(new PlayerInfo(2, start, 0));
+        configurePlayerCreation(new PlayerInfo(2, start, 3));
         configureTurns(1, new TurnInfo(new OkayActionResult(), new FloorCellStatus(), new CellStatus[4]));
         configurePlayerCells(start);
 
@@ -154,7 +154,7 @@ class GameTest {
             new Position(2, 7),
             new Position(5, 0)
         };
-        configurePlayerCreation(new PlayerInfo(2, positions[0], 0));
+        configurePlayerCreation(new PlayerInfo(2, positions[0], 3));
         Direction direction = Direction.NORTH;
         configureTurns(
             positions.length,
@@ -187,7 +187,7 @@ class GameTest {
         configureGameIOFactory();
         configureMazeCreation(new MazeInfo(12, 8, 3));
         Position start = new Position(4, 2);
-        configurePlayerCreation(new PlayerInfo(2, start, 0));
+        configurePlayerCreation(new PlayerInfo(2, start, 3));
         ActionResult result = new OkayActionResult();
         configureTurns(turns, new TurnInfo(result, new FloorCellStatus(), new CellStatus[4]));
         configurePlayerCells(start);
@@ -210,7 +210,7 @@ class GameTest {
         configureGameIOFactory();
         configureMazeCreation(new MazeInfo(12, 8, 3));
         Position start = new Position(4, 2);
-        configurePlayerCreation(new PlayerInfo(2, start, 0));
+        configurePlayerCreation(new PlayerInfo(2, start, 3));
         ActionResult result = new NotOkayActionResult();
         configureTurns(turns, new TurnInfo(result, new FloorCellStatus(), new CellStatus[4]));
         configurePlayerCells(start);
@@ -232,7 +232,7 @@ class GameTest {
         configureGameIOFactory();
         configureMazeCreation(new MazeInfo(12, 8, 3));
         Position start = new Position(4, 2);
-        configurePlayerCreation(new PlayerInfo(2, start, 0));
+        configurePlayerCreation(new PlayerInfo(2, start, 3));
         configureTurns(1, new TurnInfo(new OkayActionResult(), new FloorCellStatus(), new CellStatus[4]));
         configurePlayerCells(start);
 
@@ -250,7 +250,7 @@ class GameTest {
         configureGameIOFactory();
         configureMazeCreation(new MazeInfo(12, 8, 3));
         Position start = new Position(4, 2);
-        configurePlayerCreation(new PlayerInfo(2, start, 0));
+        configurePlayerCreation(new PlayerInfo(2, start, 3));
         configureTurns(1, new TurnInfo(new OkayActionResult(), new FloorCellStatus(), new CellStatus[4]));
         configurePlayerCells(start);
         Action action = new GoAction(Direction.NORTH);
@@ -270,7 +270,7 @@ class GameTest {
         // Arrange
         configureGameIOFactory();
         configureMazeCreation(new MazeInfo(12, 8, 3));
-        configurePlayerCreation(new PlayerInfo(2, new Position(4, 2), 0));
+        configurePlayerCreation(new PlayerInfo(2, new Position(4, 2), 3));
         configureTurns(0);
 
         // Act
@@ -296,7 +296,7 @@ class GameTest {
     }
 
     private ArgumentMatcher<PlayerParams> matchPlayerParams(Position start) {
-        return params -> params.id() == 2 && params.start() == start && params.maze() == game.getMaze();
+        return p -> p.id() == 2 && p.start() == start && p.sheetCount() == 3 && p.maze() == game.getMaze();
     }
 
     private void configurePlayerCreation(PlayerInfo playerInfo) {

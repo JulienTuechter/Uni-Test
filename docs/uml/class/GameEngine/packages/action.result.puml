@@ -1,0 +1,20 @@
+@startuml action.result
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(engine.action.result) {
+    interface ActionResult <<sealed interface>> {
+        permits SuccessActionResult, FailureActionResult
+    }
+
+    interface SuccessActionResult <<non-sealed interface>>
+    ActionResult <|-- SuccessActionResult
+
+    interface FailureActionResult <<non-sealed interface>>
+    ActionResult <|-- FailureActionResult
+}
+
+@enduml

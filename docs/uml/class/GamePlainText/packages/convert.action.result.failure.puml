@@ -1,0 +1,61 @@
+@startuml convert.action.result.failure
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram imcludes
+!include convert.action.result.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(plaintext.convert.action.result.failure) {
+    class NotOkayActionResultConverter {
+        + serialize(notOkayResult: NotOkayActionResult): String
+        + parse(data: String): NotOkayActionResult
+    }
+    plaintext.convert.action.result.FailureActionResultConverter <|-- NotOkayActionResultConverter : <<bind>> <T -> NotOkayActionResult>
+
+    class BlockedActionResultConverter {
+        + serialize(blockedResult: BlockedActionResult): String
+        + parse(data: String): BlockedActionResult
+    }
+    plaintext.convert.action.result.FailureActionResultConverter <|-- BlockedActionResultConverter : <<bind>> <T -> BlockedActionResult>
+
+    class WrongOrderActionResultConverter {
+        + serialize(wrongOrderResult: WrongOrderActionResult): String
+        + parse(data: String): WrongOrderActionResult
+    }
+    plaintext.convert.action.result.FailureActionResultConverter <|-- WrongOrderActionResultConverter : <<bind>> <T -> WrongOrderActionResult>
+
+    class NotYoursActionResultConverter {
+        + serialize(notYoursResult: NotYoursActionResult): String
+        + parse(data: String): NotYoursActionResult
+    }
+    plaintext.convert.action.result.FailureActionResultConverter <|-- NotYoursActionResultConverter : <<bind>> <T -> NotYoursActionResult>
+
+    class EmptyActionResultConverter {
+        + serialize(emptyResult: EmptyActionResult): String
+        + parse(data: String): EmptyActionResult
+    }
+    plaintext.convert.action.result.FailureActionResultConverter <|-- EmptyActionResultConverter : <<bind>> <T -> EmptyActionResult>
+
+    class TalkingActionResultConverter {
+        + serialize(talkingResult: TalkingActionResult): String
+        + parse(data: String): TalkingActionResult
+    }
+    plaintext.convert.action.result.FailureActionResultConverter <|-- TalkingActionResultConverter : <<bind>> <T -> TalkingActionResult>
+
+    class TakingActionResultConverter {
+        + serialize(takingResult: TakingActionResult): String
+        + parse(data: String): TakingActionResult
+    }
+    plaintext.convert.action.result.FailureActionResultConverter <|-- TakingActionResultConverter : <<bind>> <T -> TakingActionResult>
+
+    class NotSupportedActionResultConverter {
+        + serialize(notSupportedResult: NotSupportedActionResult): String
+        + parse(data: String): NotSupportedActionResult
+    }
+    plaintext.convert.action.result.FailureActionResultConverter <|-- NotSupportedActionResultConverter : <<bind>> <T -> NotSupportedActionResult>
+}
+
+@enduml

@@ -1,7 +1,7 @@
 package de.fhmaze.engine.action;
 
 import de.fhmaze.engine.action.result.ActionResult;
-import de.fhmaze.engine.action.result.DirectionActionResult;
+import de.fhmaze.engine.action.result.success.DirectionActionResult;
 import de.fhmaze.engine.common.Direction;
 
 public record KickAction(Direction direction) implements Action {

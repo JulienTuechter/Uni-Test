@@ -14,66 +14,66 @@ import de.fhmaze.engine.action.PositionAction;
 import de.fhmaze.engine.action.PutAction;
 import de.fhmaze.engine.action.TakeAction;
 import de.fhmaze.engine.action.result.ActionResult;
-import de.fhmaze.engine.action.result.BlockedActionResult;
-import de.fhmaze.engine.action.result.DirectionActionResult;
-import de.fhmaze.engine.action.result.EmptyActionResult;
-import de.fhmaze.engine.action.result.FormActionResult;
-import de.fhmaze.engine.action.result.NotOkayActionResult;
-import de.fhmaze.engine.action.result.NotSupportedActionResult;
-import de.fhmaze.engine.action.result.NotYoursActionResult;
-import de.fhmaze.engine.action.result.OkayActionResult;
-import de.fhmaze.engine.action.result.PositionActionResult;
-import de.fhmaze.engine.action.result.SheetActionResult;
-import de.fhmaze.engine.action.result.TakingActionResult;
-import de.fhmaze.engine.action.result.TalkingActionResult;
-import de.fhmaze.engine.action.result.WrongOrderActionResult;
+import de.fhmaze.engine.action.result.failure.BlockedActionResult;
+import de.fhmaze.engine.action.result.failure.EmptyActionResult;
+import de.fhmaze.engine.action.result.failure.NotOkayActionResult;
+import de.fhmaze.engine.action.result.failure.NotSupportedActionResult;
+import de.fhmaze.engine.action.result.failure.NotYoursActionResult;
+import de.fhmaze.engine.action.result.failure.TakingActionResult;
+import de.fhmaze.engine.action.result.failure.TalkingActionResult;
+import de.fhmaze.engine.action.result.failure.WrongOrderActionResult;
+import de.fhmaze.engine.action.result.success.DirectionActionResult;
+import de.fhmaze.engine.action.result.success.FormActionResult;
+import de.fhmaze.engine.action.result.success.OkayActionResult;
+import de.fhmaze.engine.action.result.success.PositionActionResult;
+import de.fhmaze.engine.action.result.success.SheetActionResult;
 import de.fhmaze.engine.status.CellStatus;
-import de.fhmaze.engine.status.FinishCellStatus;
-import de.fhmaze.engine.status.FloorCellStatus;
-import de.fhmaze.engine.status.FormCellStatus;
-import de.fhmaze.engine.status.SheetCellStatus;
 import de.fhmaze.engine.status.UnknownCellStatus;
 import de.fhmaze.engine.status.WallCellStatus;
+import de.fhmaze.engine.status.visitable.FinishCellStatus;
+import de.fhmaze.engine.status.visitable.FloorCellStatus;
+import de.fhmaze.engine.status.visitable.FormCellStatus;
+import de.fhmaze.engine.status.visitable.SheetCellStatus;
 import de.fhmaze.plaintext.convert.action.FinishActionSerializer;
 import de.fhmaze.plaintext.convert.action.GoActionSerializer;
 import de.fhmaze.plaintext.convert.action.KickActionSerializer;
 import de.fhmaze.plaintext.convert.action.PositionActionSerializer;
 import de.fhmaze.plaintext.convert.action.PutActionSerializer;
 import de.fhmaze.plaintext.convert.action.TakeActionSerializer;
-import de.fhmaze.plaintext.convert.action.result.BlockedActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.DirectionActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.EmptyActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.FormActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.NotOkayActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.NotSupportedActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.NotYoursActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.OkayActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.PositionActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.SheetActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.TakingActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.TalkingActionResultConverter;
-import de.fhmaze.plaintext.convert.action.result.WrongOrderActionResultConverter;
-import de.fhmaze.plaintext.convert.status.FinishCellStatusConverter;
-import de.fhmaze.plaintext.convert.status.FloorCellStatusConverter;
-import de.fhmaze.plaintext.convert.status.FormCellStatusConverter;
-import de.fhmaze.plaintext.convert.status.SheetCellStatusConverter;
+import de.fhmaze.plaintext.convert.action.result.failure.BlockedActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.failure.EmptyActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.failure.NotOkayActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.failure.NotSupportedActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.failure.NotYoursActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.failure.TakingActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.failure.TalkingActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.failure.WrongOrderActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.success.DirectionActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.success.FormActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.success.OkayActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.success.PositionActionResultConverter;
+import de.fhmaze.plaintext.convert.action.result.success.SheetActionResultConverter;
 import de.fhmaze.plaintext.convert.status.WallCellStatusConverter;
-import de.fhmaze.plaintext.convert.status.log.LogFinishCellStatusSerializer;
-import de.fhmaze.plaintext.convert.status.log.LogFloorCellStatusSerializer;
-import de.fhmaze.plaintext.convert.status.log.LogFormCellStatusSerializer;
-import de.fhmaze.plaintext.convert.status.log.LogSheetCellStatusSerializer;
 import de.fhmaze.plaintext.convert.status.log.LogUnknownCellStatusSerializer;
 import de.fhmaze.plaintext.convert.status.log.LogWallCellStatusSerializer;
+import de.fhmaze.plaintext.convert.status.log.visitable.LogFinishCellStatusSerializer;
+import de.fhmaze.plaintext.convert.status.log.visitable.LogFloorCellStatusSerializer;
+import de.fhmaze.plaintext.convert.status.log.visitable.LogFormCellStatusSerializer;
+import de.fhmaze.plaintext.convert.status.log.visitable.LogSheetCellStatusSerializer;
+import de.fhmaze.plaintext.convert.status.visitable.FinishCellStatusConverter;
+import de.fhmaze.plaintext.convert.status.visitable.FloorCellStatusConverter;
+import de.fhmaze.plaintext.convert.status.visitable.FormCellStatusConverter;
+import de.fhmaze.plaintext.convert.status.visitable.SheetCellStatusConverter;
 import java.util.function.Function;
 
 public class PlainTextProtocolFactory implements ProtocolFactory {
     @Override
     public Serializer<Action> createActionSerializer() {
-        Function<Action, Serializer<Action>> serializerProvider = action -> {
+        Function<Action, Serializer<? extends Action>> serializerProvider = action -> {
             return switch (action) {
+                case PositionAction _ -> new PositionActionSerializer();
                 case GoAction _ -> new GoActionSerializer();
                 case KickAction _ -> new KickActionSerializer();
-                case PositionAction _ -> new PositionActionSerializer();
                 case TakeAction _ -> new TakeActionSerializer();
                 case PutAction _ -> new PutActionSerializer();
                 case FinishAction _ -> new FinishActionSerializer();
@@ -86,13 +86,14 @@ public class PlainTextProtocolFactory implements ProtocolFactory {
 
     @Override
     public Converter<ActionResult> createActionResultConverter() {
-        Function<ActionResult, Serializer<ActionResult>> serializerProvider = actionResult -> {
+        Function<ActionResult, Serializer<? extends ActionResult>> serializerProvider = actionResult -> {
             return switch (actionResult) {
-                case DirectionActionResult _ -> new DirectionActionResultConverter();
+                case OkayActionResult _ -> new OkayActionResultConverter();
                 case PositionActionResult _ -> new PositionActionResultConverter();
+                case DirectionActionResult _ -> new DirectionActionResultConverter();
                 case FormActionResult _ -> new FormActionResultConverter();
                 case SheetActionResult _ -> new SheetActionResultConverter();
-                case OkayActionResult _ -> new OkayActionResultConverter();
+                case NotOkayActionResult _ -> new NotOkayActionResultConverter();
                 case BlockedActionResult _ -> new BlockedActionResultConverter();
                 case WrongOrderActionResult _ -> new WrongOrderActionResultConverter();
                 case NotYoursActionResult _ -> new NotYoursActionResultConverter();
@@ -100,11 +101,11 @@ public class PlainTextProtocolFactory implements ProtocolFactory {
                 case TalkingActionResult _ -> new TalkingActionResultConverter();
                 case TakingActionResult _ -> new TakingActionResultConverter();
                 case NotSupportedActionResult _ -> new NotSupportedActionResultConverter();
-                case NotOkayActionResult _ -> new NotOkayActionResultConverter();
+                default -> null;
             };
         };
 
-        Function<String, Parser<ActionResult>> parserProvider = data -> {
+        Function<String, Parser<? extends ActionResult>> parserProvider = data -> {
             String[] parts = data.split(" ");
             return switch (parts[0]) {
                 case "OK" -> switch (parts.length) {
@@ -115,7 +116,7 @@ public class PlainTextProtocolFactory implements ProtocolFactory {
                         default -> new DirectionActionResultConverter();
                     };
                     case 3 -> new PositionActionResultConverter();
-                    default -> new NotSupportedActionResultConverter();
+                    default -> null;
                 };
                 case "NOK" -> switch (parts.length) {
                     case 1 -> new NotOkayActionResultConverter();
@@ -126,9 +127,10 @@ public class PlainTextProtocolFactory implements ProtocolFactory {
                         case "EMPTY" -> new EmptyActionResultConverter();
                         case "TALKING" -> new TalkingActionResultConverter();
                         case "TAKING" -> new TakingActionResultConverter();
-                        default -> new NotSupportedActionResultConverter();
+                        case "NOTSUPPORTED" -> new NotSupportedActionResultConverter();
+                        default -> null;
                     };
-                    default -> new NotSupportedActionResultConverter();
+                    default -> null;
                 };
                 default -> null;
             };
@@ -139,25 +141,25 @@ public class PlainTextProtocolFactory implements ProtocolFactory {
 
     @Override
     public Converter<CellStatus> createCellStatusConverter() {
-        Function<CellStatus, Serializer<CellStatus>> serializerProvider = cellStatus -> {
+        Function<CellStatus, Serializer<? extends CellStatus>> serializerProvider = cellStatus -> {
             return switch (cellStatus) {
-                case WallCellStatus _ -> new WallCellStatusConverter();
                 case FloorCellStatus _ -> new FloorCellStatusConverter();
                 case FormCellStatus _ -> new FormCellStatusConverter();
                 case SheetCellStatus _ -> new SheetCellStatusConverter();
                 case FinishCellStatus _ -> new FinishCellStatusConverter();
+                case WallCellStatus _ -> new WallCellStatusConverter();
                 default -> null;
             };
         };
 
-        Function<String, Parser<CellStatus>> parserProvider = data -> {
+        Function<String, Parser<? extends CellStatus>> parserProvider = data -> {
             String[] parts = data.split(" ");
             return switch (parts[0]) {
-                case "WALL" -> new WallCellStatusConverter();
                 case "FLOOR" -> new FloorCellStatusConverter();
                 case "FORM" -> new FormCellStatusConverter();
                 case "SHEET" -> new SheetCellStatusConverter();
                 case "FINISH" -> new FinishCellStatusConverter();
+                case "WALL" -> new WallCellStatusConverter();
                 default -> null;
             };
         };
@@ -167,13 +169,13 @@ public class PlainTextProtocolFactory implements ProtocolFactory {
 
     @Override
     public Serializer<CellStatus> createLogCellStatusSerializer() {
-        Function<CellStatus, Serializer<CellStatus>> serializerProvider = cellStatus -> {
+        Function<CellStatus, Serializer<? extends CellStatus>> serializerProvider = cellStatus -> {
             return switch (cellStatus) {
-                case WallCellStatus _ -> new LogWallCellStatusSerializer();
                 case FloorCellStatus _ -> new LogFloorCellStatusSerializer();
                 case FormCellStatus _ -> new LogFormCellStatusSerializer();
                 case SheetCellStatus _ -> new LogSheetCellStatusSerializer();
                 case FinishCellStatus _ -> new LogFinishCellStatusSerializer();
+                case WallCellStatus _ -> new LogWallCellStatusSerializer();
                 case UnknownCellStatus _ -> new LogUnknownCellStatusSerializer();
                 default -> null;
             };

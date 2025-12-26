@@ -1,0 +1,4 @@
+' styling options
+skinparam default {
+    FontName Consolas
+}

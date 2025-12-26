@@ -1,0 +1,58 @@
+@startuml action
+
+' config includes
+!include ../../config/macros.iuml
+!include ../../config/styles.iuml
+
+' diagram includes
+!include common.puml
+
+' class diagram (https://plantuml.com/class-diagram)
+$package(engine.action) {
+    interface Action <<interface>> {
+        + successful(result: ActionResult): boolean {abstract}
+    }
+
+    class InitAction <<leaf>> {
+        + successful(result: ActionResult): boolean
+    }
+    Action <|.. InitAction
+
+    class PositionAction <<leaf>> {
+        + successful(result: ActionResult): boolean
+    }
+    Action <|.. PositionAction
+
+    class GoAction <<leaf>> {
+        + GoAction(direction: Direction)
+        + successful(result: ActionResult): boolean
+        + direction(): Direction
+    }
+    Action <|.. GoAction
+    GoAction --> "1" engine.common.Direction : - direction: Direction {readOnly}
+
+    class KickAction <<leaf>> {
+        + KickAction(direction: Direction)
+        + successful(result: ActionResult): boolean
+        + direction(): Direction
+    }
+    Action <|.. KickAction
+    KickAction --> "1" engine.common.Direction : - direction: Direction {readOnly}
+
+    class TakeAction <<leaf>> {
+        + successful(result: ActionResult): boolean
+    }
+    Action <|.. TakeAction
+
+    class PutAction <<leaf>> {
+        + successful(result: ActionResult): boolean
+    }
+    Action <|.. PutAction
+
+    class FinishAction <<leaf>> {
+        + successful(result: ActionResult): boolean
+    }
+    Action <|.. FinishAction
+}
+
+@enduml
